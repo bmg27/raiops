@@ -1,0 +1,10 @@
+/* This file is kept for Jetstream/Livewire compatibility */
+/* The main styles are in vendor.css and styles.css */
+
+/* Livewire cloak directive */
+[x-cloak] {
+    display: none;
+}
+
+/* Import main stylesheets - only used if @vite directive points here */
+/* Typically we import vendor.css and styles.css separately in blade templates */

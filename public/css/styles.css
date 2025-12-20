@@ -1,0 +1,1047 @@
+:root,
+[data-bs-theme=light] {
+    --rai-header-height: 4rem;
+    --rai-nav-close: 64px;
+    --rai-nav-open: 250px;
+    --rai-nav-spacing: 2.5rem;
+    --theme-badge-bg: var(--bs-white);
+    --theme-badge: var(--bs-secondary);
+    --theme-body-bg: var(--bs-tertiary-bg);
+    --theme-header-bg: var(--bs-turquoise);
+    --theme-hr: var(--bs-primary-border-subtle);
+    --theme-logo: brightness(0) invert(1);
+    --theme-navigation-bg: var(--bs-body-bg);
+    --theme-navigation-link: var(--bs-body-color);
+    --theme-navigation-link-active: var(--bs-blue);
+    --theme-navigation-toggle: var(--bs-white);
+}
+
+[data-bs-theme=dark] {
+    --theme-badge-bg: var(--bs-gray-800);
+    --theme-badge: var(--bs-gray-500);
+    --theme-body-bg: var(--bs-gray-900);
+    --theme-header-bg: var(--bs-black);
+    --theme-hr: var(--bs-primary);
+    --theme-logo: brightness(0) invert(1);
+    --theme-navigation-bg: var(--bs-black);
+    --theme-navigation-link: var(--bs-body-color);
+    --theme-navigation-link-active: var(--bs-primary);
+    --theme-navigation-toggle: var(--bs-white);
+    --bs-primary: #3C899B;
+    --bs-primary-rgb:60,137,155;
+}
+
+[data-bs-theme=dark] .btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #3c899b;
+    --bs-btn-border-color: #3c899b;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #275864;
+    --bs-btn-hover-border-color: #204851;
+    --bs-btn-focus-shadow-rgb: 47, 104, 119;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #204851;
+    --bs-btn-active-border-color: #18383f;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #3c899b;
+    --bs-btn-disabled-border-color: #3c899b;
+}
+
+[data-bs-theme=dark] .btn-outline-primary {
+    --bs-btn-color: #3c899b;
+    --bs-btn-border-color: #3c899b;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #3c899b;
+    --bs-btn-hover-border-color: #3c899b;
+    --bs-btn-focus-shadow-rgb: 10, 77, 95;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #3c899b;
+    --bs-btn-active-border-color: #3c899b;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #3c899b;
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color: #3c899b;
+    --bs-gradient: none;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.bg-theme-body {
+    background-color: var(--theme-body-bg);
+}
+
+.application {
+    margin: 0;
+    padding: 0;
+    /** see navigation css */
+}
+
+.bg-header {
+    background-color: var(--theme-header-bg);
+}
+
+.header {
+    height: var(--rai-header-height);
+    line-height: var(--rai-header-height);
+}
+
+.header .dropdown-menu {
+    line-height: 1rem;
+}
+
+.application-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    /* z-index: 3; */
+    z-index: 1071;
+}
+
+.main {
+    /** min-height: 500px; **/
+    margin-top: var(--rai-header-height);
+}
+
+.menu-button {
+    color: var(--theme-navigation-toggle);
+    margin-right: 1.125rem;
+    margin-left: 1.125rem;
+}
+
+/**
+ * site search
+ */
+.search-container {
+    display: none;
+    transition: 0.4s ease;
+    transition-delay: 0s;
+    width: 65%;
+}
+
+.search-container.close {
+    display: block;
+    transition-delay: 0s;
+    transition: all 0.4s ease;
+}
+
+.search-icon {
+    top: 4px;
+    left: 3px;
+    line-height: var(--bs-body-line-height);
+}
+
+.search-input {
+    padding-left: 2.5rem;
+}
+
+.clear-site-search {
+    top: 9px;
+    right: 12px;
+}
+
+.search-result.active {
+    background-color: var(--bs-secondary);
+    background-color: rgba(var(--bs-primary-rgb), .2);
+}
+
+.search-result.active .search-result-name,
+.search-result.active .search-result-subtext,
+.search-result.active .clear-search-result {
+    /*
+    color: var(--bs-white)!important;
+    */
+}
+
+/**
+ * utilities
+ */
+.badge-theme {
+    background-color: var(--theme-badge-bg);
+    border: var(--bs-border-width) var(--bs-border-style) var(--theme-badge)!important;
+    border-radius: var(--bs-border-radius-pill);
+    color: var(--theme-badge);
+    font-weight: 400;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.hr {
+    width: 100%;
+    border-top: 3px solid var(--theme-hr);
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    opacity: .6;
+}
+
+/**
+ * media query lg
+ * **/
+@media (min-width: 992px) {
+    .application {
+        margin-left: var(--rai-nav-open);
+        transition: all 0.4s ease;
+        width: auto;
+    }
+
+    .application-header {
+        left: var(--rai-nav-close);
+    }
+
+    /**
+     * search
+     */
+    .search-container {
+        display: block;
+        width: 50%;
+        margin-left: calc(var(--rai-nav-open) - 16px);
+        margin-right: 48px;
+    }
+
+    .search-container.open-on-load {
+        margin-left: calc(var(--rai-nav-open) - 16px);
+    }
+
+    .search-container:not(.open-on-load).close {
+        margin-left: 48px;
+    }
+}
+
+.navigation,
+.navigation .nav-links li:hover,
+.navigation .nav-links li .sub-menu {
+    background-color: var(--theme-navigation-bg)!important;
+}
+
+.navigation {
+    font-family: inherit;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--rai-nav-open);
+    z-index: 1072;
+    transition: all 0.5s ease;
+}
+
+.navigation.close {
+    left: calc(0px - var(--rai-nav-open)); /* negative */
+}
+
+.navigation .logo-details {
+    height: calc(var(--rai-header-height) - .06rem); /* matches application header */
+    display: flex;
+    align-items: center;
+}
+
+.navigation .logo-details img {
+    font-size: 30px;
+    color: var(--theme-navigation-link);
+    width: 42px;
+    height: 42px;
+    margin: 0px 11px 0px 11px;
+    text-align: center;
+    line-height: var(--rai-header-height);
+    z-index:1;
+}
+
+.navigation .logo-details img.logo-text {
+    width: auto;
+    height: 50%;
+    transition: 0.3s ease;
+    transition-delay: 0.1s;
+    margin-left: -.5rem; /* match spacing with nav groups and sub menus */
+    filter: var(--theme-logo); /* change logo to match theme */
+}
+
+.navigation .nav-links {
+    height: 100%;
+    padding: 8px 0 0 0;
+    overflow: auto;
+}
+
+.navigation .nav-links::-webkit-scrollbar {
+    display: none;
+}
+
+.navigation .nav-links li {
+    position: relative;
+    list-style: none;
+    transition: all 0.4s ease;
+}
+
+.navigation .nav-links li:hover {
+    background: var(--bs-body-bg);
+}
+
+.navigation .nav-links li .link-icon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navigation .nav-links li i {
+    height: var(--rai-nav-spacing);
+    line-height: var(--rai-nav-spacing);
+    min-width: var(--rai-nav-close);
+    text-align: center;
+    color: var(--theme-navigation-link);
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.navigation .nav-links li.expand-group i.navigation-chevron {
+    transform: rotate(-180deg);
+}
+
+.navigation .nav-links li a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.navigation .nav-links li a .link-name {
+    font-weight: 700;
+    color: var(--theme-navigation-link);
+    transition: all 0.4s ease;
+    /**
+     * These are the nav groups when the menu is open.  Move them .5rem to the left.
+     */
+    margin-left: -.5rem;
+}
+
+.navigation .nav-links li .sub-menu {
+    /**
+     * These are the nav links when the menu is open.  Move them .5rem to the left.
+     * padding: 6px 6px 14px 64px;
+     */
+    padding: 4px 4px 4px 56px;
+    margin-top: -10px;
+    display: none;
+}
+
+.navigation .nav-links li.expand-group .sub-menu {
+    display: block;
+}
+
+.navigation .nav-links li .sub-menu a {
+    color: var(--theme-navigation-link);
+    padding: .25rem 0;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.navigation .nav-links li .sub-menu a:not(.link-name):hover {
+    opacity: 1;
+    color: var(--theme-navigation-link-active)!important;
+}
+
+.navigation .nav-links li .sub-menu .link-name {
+    display: none;
+}
+
+.navigation .nav-links li .sub-menu.blank {
+    opacity: 1;
+    pointer-events: auto;
+    padding: 3px 20px 6px 16px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.navigation .nav-links li:hover .sub-menu.blank {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.navigation-item {
+    color: var(--theme-navigation-link);
+}
+
+.navigation-item:hover,
+.navigation-item.active {
+    color: var(--theme-navigation-link-active)!important;
+}
+
+.navigation .menu-button {
+    /** hide the navigation menu button on mobile **/
+    display: none;
+}
+
+/** this only applies when .menu-button is in .application, i.e. not in nav **/
+.navigation ~ .application > .menu-button {
+    position: fixed;
+    top: 0;
+    left: var(--rai-nav-open);
+    line-height: var(--rai-header-height);
+    z-index:1072;
+    transition: all 0.4s ease;
+}
+
+.navigation.close ~ .application > .menu-button {
+    left: 0;
+}
+
+.mobile-profile-link {
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.mobile-profile-link img {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--bs-secondary);
+    border-radius: 50%;
+}
+
+.mobile-profile-link i.fs-3::before {
+    vertical-align: -0.5rem;
+}
+
+/* ========================================
+   GRANDCHILDREN MENU STYLES - Option B: Minimal Indent + Opacity
+   ======================================== */
+
+/* Parent item that contains grandchildren */
+.navigation .nav-links li .sub-menu .grandparent-item {
+    position: relative;
+}
+
+/* Child link with grandchildren - has chevron */
+.navigation .nav-links li .sub-menu .has-grandchildren {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    color: var(--theme-navigation-link);
+}
+
+/* Chevron icon for grandchildren toggle */
+.navigation .nav-links li .sub-menu .grandchild-chevron {
+    font-size: 12px;
+    margin-left: 0.5rem;
+    transition: transform 0.3s ease;
+    opacity: 0.7;
+}
+
+.navigation .nav-links li .sub-menu .grandchild-chevron.rotated {
+    transform: rotate(-180deg);
+}
+
+/* Grandchildren menu container - minimal indent */
+.navigation .nav-links li .sub-menu .grandchild-menu {
+    list-style: none;
+    padding-left: 0.35rem; /* Minimal indent */
+    margin-top: 0.15rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Individual grandchild item - same color as regular child items */
+.navigation .nav-links li .sub-menu .grandchild-item {
+    padding: 0.25rem 0;
+    font-weight: 400;
+    color: var(--theme-navigation-link);
+    opacity: 1; /* Same as regular child items */
+    transition: all 0.2s ease;
+}
+
+.navigation .nav-links li .sub-menu .grandchild-item:hover {
+    opacity: 1;
+    color: var(--theme-navigation-link-active)!important;
+}
+
+.navigation .nav-links li .sub-menu .grandchild-item.active {
+    color: var(--theme-navigation-link-active)!important;
+    font-weight: 600;
+    opacity: 1;
+}
+
+
+@media (min-width: 992px) {
+
+    /**
+     * Only close navigation in desktop
+     */
+    .navigation.open-on-load {
+        left: 0;
+    }
+
+    .navigation:not(.open-on-load).close {
+        left: 0;
+        width: var(--rai-nav-close);
+        /* Don't use overflow: hidden - we need sub-menu to extend beyond nav */
+    }
+    
+    .navigation .menu-button {
+        /** This is the menu button on desktop next to the logo **/
+        display: inline;
+    }
+
+    .navigation.logo-details {
+        width: 100%;
+    }
+
+    .navigation:not(.open-on-load).close .logo-details .logo-name, 
+    .navigation:not(.open-on-load).close .logo-details img.logo-text {
+        transition-delay: 0s;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links {
+        overflow: visible;
+        position: relative;
+        /* Ensure nav-links container respects parent boundaries */
+        width: 100%;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li .link-icon {
+        display: block
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links i.navigation-chevron {
+        display: none;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li a .link-name {
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li {
+        /* Ensure li doesn't extend beyond nav boundaries */
+        position: relative;
+        /* Constrain li to nav width - sub-menu will be positioned absolutely outside */
+        width: 100%;
+        overflow: visible;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li .sub-menu {
+        /**
+         * This is the sub-menu when the navigation is collapsed
+         */
+        position: absolute;
+        left: 100%;
+        top: 0;
+        margin-top: 0;
+        margin-left: 0; /* No gap - sub-menu should connect to nav to prevent hover gaps */
+        padding: .5rem 2rem 1rem 1rem;
+        border-radius: 0 6px 6px 0;
+        opacity: 0;
+        display: block;
+        pointer-events: none !important; /* CRITICAL: Force disable all interactions when hidden */
+        transition: opacity 0.15s ease, visibility 0s linear 0.15s;
+        visibility: hidden;
+        z-index: 1073; /* Ensure it's above nav but below modals */
+        /* Ensure sub-menu doesn't interfere when hidden */
+        will-change: opacity, visibility;
+
+        border-top: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+        border-right: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+        border-bottom: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+    }
+    
+    /* Only enable interactions when parent li is hovered - this is the key fix */
+    .navigation:not(.open-on-load).close .nav-links li:hover > .sub-menu {
+        opacity: 1;
+        pointer-events: auto !important; /* Enable interactions when visible */
+        visibility: visible;
+        transition: opacity 0.2s ease, visibility 0s;
+    }
+    
+    /* Keep sub-menu visible when hovering directly over it (allows mouse movement from nav to sub-menu) */
+    .navigation:not(.open-on-load).close .nav-links li .sub-menu:hover {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+    }
+    
+    /* CRITICAL: Ensure sub-menu is completely disabled when parent is not hovered AND sub-menu is not hovered */
+    .navigation:not(.open-on-load).close .nav-links li:not(:hover) .sub-menu:not(:hover) {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li .sub-menu .link-name {
+        /**
+         * These are the nav groups when the menu is closed.
+         */
+        display: block;
+        opacity: 1;
+        font-weight: 700;
+        color: var(--theme-navigation-link);
+        white-space: nowrap;
+    }
+    
+    /* ===== COLLAPSED MODE: Grandchildren Styles ===== */
+    
+    /* Hide the grandchild chevron in collapsed mode - not needed */
+    .navigation.close .nav-links li .sub-menu .grandchild-chevron {
+        display: none;
+    }
+    
+    /* Hide grandchildren by default in collapsed mode when parent is not hovered */
+    .navigation.close .nav-links li:not(:hover) .sub-menu:not(:hover) .grandchild-menu {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Show grandchildren when parent li is hovered - THIS IS THE KEY FIX */
+    .navigation.close .nav-links li:hover .sub-menu .grandchild-menu {
+        display: block !important;
+        padding-left: 0.5rem !important;
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    /* Also show grandchildren when hovering directly over the sub-menu (allows mouse movement from nav to sub-menu) */
+    .navigation.close .nav-links li .sub-menu:hover .grandchild-menu {
+        display: block !important;
+        padding-left: 0.5rem !important;
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    /* Make child with grandchildren look like regular text in collapsed mode */
+    .navigation.close .nav-links li .sub-menu .has-grandchildren {
+        cursor: default;
+        pointer-events: none; /* Prevent clicking in collapsed mode */
+        font-weight: 600;
+    }
+    
+    /* Grandchildren in collapsed flyout */
+    .navigation.close .nav-links li .sub-menu .grandchild-item {
+        opacity: 1; /* Same as regular child items */
+        font-size: 0.95rem;
+        /* pointer-events will be inherited from parent sub-menu */
+    }
+    
+    /* Grandchildren in collapsed flyout - hover effects only when sub-menu is visible */
+    .navigation.close .nav-links li:hover .sub-menu .grandchild-item:hover {
+        opacity: 1;
+        color: var(--theme-navigation-link-active)!important;
+    }
+    
+    .navigation:not(.open-on-load).close ~ .application {
+        margin-left: var(--rai-nav-close);
+    }
+
+    .navigation.open-on-load ~ .application > .menu-button {
+        left: var(--rai-nav-open) !important;
+    }
+
+    .navigation:not(.open-on-load).close ~ .application > .menu-button {
+        left: var(--rai-nav-close);
+    }
+
+    .navigation .menu-button {
+        /** This is the menu button on desktop next to the logo **/
+        visibility: visible;
+    }
+}
+.table-tertiary {
+    --bs-table-bg: rgba(190, 200, 210, .1);
+}
+
+th, td {
+    vertical-align: middle;
+}
+
+.table-nowrap td,
+.table-nowrap th {
+    white-space: nowrap;
+}
+
+.chat-overlay {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2000;
+    width: 100dvw;
+    height: 100dvh;
+    margin: auto;
+    overflow-y: scroll;
+    opacity: 1;
+}
+
+.chat-overlay::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: -1;
+}
+
+.chat-container {
+    max-width: 992px; /** matches lg **/
+    border: none;
+}
+
+.chat-conversation {
+    background-color: var(--theme-body-bg);
+    /* Custom scrollbar styling */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--bs-primary) transparent; /* Firefox */
+}
+
+.chat-conversation::-webkit-scrollbar {
+    width: 0.25rem; /* 4px */
+}
+
+.chat-conversation::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-conversation::-webkit-scrollbar-thumb {
+    background-color: var(--bs-primary);
+    border-radius: 0.125rem; /* 2px */
+}
+
+.chat-conversation::-webkit-scrollbar-thumb:hover {
+    background-color: var(--bs-primary);
+}
+
+.chat-footer {
+    background-color: var(--bs-body-bg);
+}
+
+.chat-footer-input-group {
+    box-shadow: var(--bs-box-shadow-sm) !important;
+}
+
+.prompt-content,
+.response-container {
+    width: 90%;
+}
+
+.prompt-bubble {
+    position: relative;
+    border-radius: .5rem;
+    /*
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+    */
+    animation: bubble 0.3s ease-in;
+}
+
+.prompt-bubble:before {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 0;
+	height: 0;
+	border: calc(1rem + 3px) solid transparent;
+    /*
+	border-top-color: var(--bs-primary);
+    */
+	border-bottom: 0;
+	border-right: 0;
+	margin-right: calc(1rem - 1px);
+	margin-bottom: calc(-1rem - 3px);
+}
+
+.prompt-bubble:after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 0;
+	height: 0;
+	border: 1rem solid transparent;
+	border-top-color: var(--bs-primary);
+	border-bottom: 0;
+	border-right: 0;
+	margin-right: 1rem;
+	margin-bottom: -1rem;
+}
+
+.thinking-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    /*
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 1rem;
+    border-bottom-left-radius: 0.25rem;
+    box-shadow: var(--bs-box-shadow-sm);
+    */
+}
+
+.thinking-dots {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.thinking-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--bs-primary);
+    border-radius: 50%;
+    animation: thinking 1.4s ease-in-out infinite;
+}
+
+.thinking-dot:nth-child(1) { animation-delay: -0.32s; }
+.thinking-dot:nth-child(2) { animation-delay: -0.16s; }
+
+.response-bubble {
+	position: relative;
+    border-radius: .5rem;
+    /*
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+    */
+}
+
+.response-bubble:before {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	border: calc(1rem + 3px) solid transparent;
+	border-top-color: var(--bs-border-color);
+	border-bottom: 0;
+	border-left: 0;
+	margin-left: calc(1rem - 1px);
+	margin-bottom: calc(-1rem - 3px);
+}
+
+.response-bubble:after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	border: 1rem solid transparent;
+	border-top-color: var(--bs-body-bg);
+	border-bottom: 0;
+	border-left: 0;
+	margin-left: 1rem;
+	margin-bottom: -1rem;
+}
+
+.response-content {
+    animation: bubble 0.3s ease-in;
+}
+
+.btn-export {
+    border: none;
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 1.1rem;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.btn-export:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--bs-white);
+}
+
+.btn-response-feedback {
+    border: none;
+    background-color: transparent;
+    color: var(--bs-secondary);
+    font-size: 0.9rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    width: 2rem;
+    height: 2rem;
+    opacity: 0.6;
+}
+
+.btn-response-feedback:hover {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-primary);
+    transform: translateY(-1px);
+    opacity: 1;
+}
+
+.btn-response-feedback-clicked {
+    color: var(--bs-primary);
+}
+
+.btn-response-feedback-thumbs-up i::before {
+    animation-name: thumbs-up;
+    animation-duration: .5s;
+}
+
+.btn-response-feedback-thumbs-down i::before {
+    animation-name: thumbs-down;
+    animation-duration: .5s;
+}
+
+/* ============================================================================ */
+/* FLOATING ACTION BUTTON (BOOKMARKS)                                           */
+/* ============================================================================ */
+
+.fab-bookmarks {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background-color: var(--bs-primary);
+    border: 1px solid var(--bs-white);
+    border-radius: 50%;
+    box-shadow: var(--bs-box-shadow);
+    color: var(--bs-white);
+    font-size: 1.4rem;
+    z-index: 1050;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fab-bookmarks:hover {
+    background-color: var(--theme-header-bg);
+    color: var(--bs-white);
+    transform: scale(1.1);
+    box-shadow: var(--bs-box-shadow-lg);
+}
+
+.fab-bookmarks:active {
+    transform: scale(0.95);
+}
+
+/* Position dropdown relative to FAB */
+.fab-bookmarks + .dropdown-menu {
+    bottom: 85px !important;
+    right: 20px !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+}
+
+/* Bookmarks dropdown responsive styling */
+.bookmarks-dropdown {
+    min-width: 280px;
+    max-width: 320px;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+/* Bookmarks styling */
+.bookmark-item {
+    font-size: 0.9rem;
+    padding: 0.4rem 1rem;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+
+    /* PREVENT TEXT FROM WRAPPING OR OVERFLOWING */
+    display: block;              /* Ensures ellipsis works correctly */
+    white-space: nowrap;         /* Keeps text on a single line */
+    overflow: hidden;            /* Hides text that goes beyond width */
+    text-overflow: ellipsis;     /* Adds "..." when text is clipped */
+    width: 100%;                 /* Matches parent dropdown width */
+    max-width: 100%;             /* Avoids expanding dropdown */
+    box-sizing: border-box;      /* Include padding in total width */
+
+}
+
+.bookmark-item:hover {
+    background-color: var(--bs-secondary-bg);
+    border-left-color: var(--bs-primary);
+    color: var(--bs-primary);
+    font-weight: 500;
+}
+
+@media (min-width: 992px) {
+    .chat-container {
+        border: solid 0.125rem var(--bs-turquoise);
+        border-radius: .5rem;
+    }
+
+    .chat-header {
+        border-top-left-radius: .25rem;
+        border-top-right-radius: .25rem;
+    }
+
+    .prompt-content,
+    .response-container {
+        width: 85%;
+    }
+
+    .chat-footer {
+        border-bottom-right-radius: .25rem;
+        border-bottom-left-radius: .25rem;
+    }
+
+    .chat-footer-input-group {
+        box-shadow: var(--bs-box-shadow) !important;
+    }
+
+    .chat-footer-input {
+        min-height: calc(1.5em + 1rem + calc(var(--bs-border-width) * 2))!important;
+        padding: .5rem 1rem!important;
+        font-size: 1.25rem!important;
+    }
+}
+
+@keyframes bubble {
+    from { opacity: 0; transform: scale(.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes thinking {
+    0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes thumbs-down {
+	0% { transform: scale(1); }
+	99% { transform: scale(3) translateY(15px); opacity: 0; }
+	100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes thumbs-up {
+	0% { transform: scale(1); }
+	99% { transform: scale(3) translateY(-15px); opacity: 0; }
+	100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+cat: resources/css/stylesheets/themes/theme-rai.css: No such file or directory
+cat: resources/css/stylesheets/themes/theme-slate.css: No such file or directory

@@ -1,0 +1,43 @@
+[data-bs-theme=rai] {
+    /**
+     * theme variables
+     */
+
+    --theme-body-bg: #dae4e7; /* rgba(var(--bs-turquoise-rgb), .15); this only works on white */
+    --theme-header-bg: var(--bs-turquoise);
+    --theme-logo: brightness(1);
+    --theme-navigation-bg: var(--bs-turquoise);
+    --theme-navigation-link: var(--bs-tan);
+    --theme-navigation-link-active: var(--bs-white);
+    --theme-navigation-toggle: var(--bs-tan);
+
+
+    /**
+     * bootstrap overrides
+     */
+    /*--bs-body-bg: rgba(var(--bs-turquoise-rgb), .15);
+    --bs-body-color: var(--bs-dark);*/
+
+    --bs-border-color: rgba(83, 130, 143, 0.8);
+    --bs-box-shadow: 0 0.5rem 1rem rgba(var(--bs-turquoise-rgb), 0.2);
+    --bs-box-shadow-sm: 0 0.125rem 0.25rem rgba(var(--bs-turquoise-rgb), 0.15);
+    --bs-box-shadow-lg: 0 1rem 3rem rgba(var(--bs-turquoise-rgb), 0.25);
+
+}
+
+[data-bs-theme=rai] .card {
+    --bs-card-bg: var(--bs-white);
+}
+
+[data-bs-theme=rai] .table {
+    --bs-table-bg: var(--bs-white);
+    --bs-table-hover-bg: rgba(var(--bs-turquoise-rgb), 0.15);
+}
+
+[data-bs-theme=rai] body {
+    background-color: var(--theme-body-bg) !important;
+}
+
+[data-bs-theme=rai] .bg-theme-body {
+    background-color: var(--theme-body-bg) !important;
+}

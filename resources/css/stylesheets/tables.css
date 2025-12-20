@@ -1,0 +1,13 @@
+.table-tertiary {
+    --bs-table-bg: rgba(190, 200, 210, .1);
+}
+
+th, td {
+    vertical-align: middle;
+}
+
+.table-nowrap td,
+.table-nowrap th {
+    white-space: nowrap;
+}
+

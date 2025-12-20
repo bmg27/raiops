@@ -1,0 +1,29 @@
+[data-bs-theme=sandbox] {
+    /**
+     * theme variables
+     */
+    --theme-body-bg: rgba(var(--bs-success-rgb), .2);
+    --theme-header-bg: var(--bs-blue);
+    --theme-logo: brightness(0) invert(1);
+    --theme-navigation-bg: var(--bs-blue);
+    --theme-navigation-link: var(--bs-yellow);
+    --theme-navigation-link-active: var(--bs-white);
+    --theme-navigation-toggle: var(--bs-white);
+
+    /**
+     * bootstrap overrides
+    --bs-border-color: rgba(83, 130, 143, 0.8);
+    --bs-box-shadow: 0 0.5rem 1rem rgba(var(--bs-turquoise-rgb), 0.2);
+    --bs-box-shadow-sm: 0 0.125rem 0.25rem rgba(var(--bs-turquoise-rgb), 0.15);
+    --bs-box-shadow-lg: 0 1rem 3rem rgba(var(--bs-turquoise-rgb), 0.25);
+
+    .card {
+        --bs-card-bg: var(--bs-white);
+    }
+
+    .table {
+        --bs-table-bg: var(--bs-white);
+        --bs-table-hover-bg: rgba(var(--bs-turquoise-rgb), 0.15);
+    }
+     */
+}

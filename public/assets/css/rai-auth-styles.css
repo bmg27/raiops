@@ -1,0 +1,671 @@
+/* ================================================================
+   RÄI AUTHENTICATION PAGES - CONSOLIDATED STYLES
+   ================================================================
+
+   This stylesheet contains all authentication page styles for the
+   Rāi restaurant AI assistant application. The design uses a
+   conversational chat bubble interface to reinforce the AI branding.
+
+   Author: [Your Name]
+   Version: 1.0
+   Last Updated: [Date]
+
+   Dependencies:
+   - Bootstrap 5.3.0
+   - Bootstrap Icons 1.10.0
+   ================================================================ */
+
+/* ================================================================
+   CSS CUSTOM PROPERTIES (DESIGN TOKENS)
+   ================================================================ */
+
+:root {
+    /* Brand Colors - Consistent across all Rāi interfaces */
+    --rai-primary: #003745;    /* Dark teal - primary brand color */
+    --rai-secondary: #c38f5d;  /* Gold/bronze - accent and interactive elements */
+    --rai-light: #f8f9fa;      /* Light background - Bootstrap light variant */
+}
+
+/* ================================================================
+   BASE STYLES & TYPOGRAPHY
+   ================================================================ */
+
+body {
+    background-color: var(--rai-light);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    /* Using system font stack for optimal performance and native feel */
+}
+
+/* ================================================================
+   LAYOUT CONTAINERS
+   ================================================================ */
+
+/* Main container for all auth pages */
+.login-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--rai-light) 0%, #e9ecef 100%);
+    padding: 1rem;
+    /* Subtle gradient provides visual depth without being distracting */
+}
+
+/* ================================================================
+   CHAT BUBBLE CARD COMPONENT
+   ================================================================
+
+   The core design element that makes auth pages feel conversational.
+   Styled to look like a speech bubble from the Rāi AI assistant.
+   ================================================================ */
+
+.chat-bubble-card {
+    background-color: white;
+    border-radius: 1.5rem;
+    border-bottom-left-radius: 0.5rem; /* Reduced radius for speech bubble tail effect */
+    box-shadow: 0 8px 32px rgba(0, 55, 69, 0.15); /* Soft shadow using primary color */
+    border: 1px solid rgba(195, 143, 93, 0.1); /* Subtle border using secondary color */
+    position: relative;
+    max-width: 420px;
+    margin: 0 auto;
+    animation: slideIn 0.6s ease-out; /* Smooth entry animation */
+}
+
+/* Register page needs slightly more width for password requirements */
+.register-page .chat-bubble-card {
+    max-width: 450px;
+}
+
+/* Chat bubble tail - creates the speech bubble effect */
+.chat-bubble-card::before {
+    content: '';
+    position: absolute;
+    bottom: -8px;  /* Positioned just below the card */
+    left: 20px;    /* Offset from left edge */
+    width: 16px;
+    height: 16px;
+    background-color: white;
+    border-left: 1px solid rgba(195, 143, 93, 0.1);   /* Match card border */
+    border-bottom: 1px solid rgba(195, 143, 93, 0.1); /* Match card border */
+    transform: rotate(-45deg); /* Creates the tail pointing effect */
+    /* This pseudo-element creates the illusion that the bubble is "speaking" */
+}
+
+/* ================================================================
+   AVATAR & BRANDING SECTION
+   ================================================================ */
+
+/* Container for Rāi avatar and welcome message */
+.rai-avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Rāi AI Assistant Avatar - pill-shaped design */
+.rai-avatar {
+    width: 50px;
+    height: 50px;
+    background-color: var(--rai-secondary);
+    border-radius: 25px; /* Full rounding for pill shape */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rai-primary);
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(195, 143, 93, 0.3); /* Matching shadow */
+    /* Contains the "Rāi" text identifier */
+}
+
+/* Welcome text container */
+.welcome-text {
+    flex: 1; /* Takes remaining space next to avatar */
+}
+
+.welcome-text h5 {
+    color: var(--rai-primary);
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.welcome-text small {
+    color: #6c757d; /* Bootstrap muted text color */
+    font-size: 0.875rem;
+}
+
+/* ================================================================
+   LOGO SECTION
+   ================================================================ */
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo-container img {
+    max-height: 60px;
+    height: auto;
+    filter: drop-shadow(0 2px 8px rgba(0, 55, 69, 0.1)); /* Subtle logo shadow */
+    /* Logo should be named 'logo_auth.png' as per handoff document */
+}
+
+/* ================================================================
+   CONTENT SECTIONS & MESSAGING
+   ================================================================ */
+
+/* Help text sections (used in forgot password, etc.) */
+.help-text {
+    background-color: rgba(195, 143, 93, 0.05); /* Very light secondary color wash */
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--rai-secondary); /* Accent border */
+    /* Creates a highlighted information section */
+}
+
+.help-text p {
+    margin-bottom: 0;
+    color: #5a6c7d; /* Slightly darker than muted for better readability */
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Password requirements section (register page) */
+.password-requirements {
+    background-color: rgba(195, 143, 93, 0.05);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: #5a6c7d;
+    /* Provides clear password criteria to users */
+}
+
+.password-requirements ul {
+    margin-bottom: 0;
+    padding-left: 1.25rem;
+}
+
+.password-requirements li {
+    margin-bottom: 0.25rem;
+}
+
+/* ================================================================
+   FORM ELEMENTS & FLOATING LABELS
+   ================================================================
+
+   Custom floating label implementation that works with Bootstrap 5.3
+   and provides smooth animations for better UX.
+   ================================================================ */
+
+.form-floating {
+    margin-bottom: 1rem;
+}
+
+/* Enhanced form control styling */
+.form-floating > .form-control {
+    border: 2px solid #e9ecef; /* Thicker border for better visibility */
+    border-radius: 0.75rem;    /* Rounded corners match design system */
+    padding: 1rem 0.75rem 0.25rem 0.75rem; /* Custom padding for floating labels */
+    height: calc(3.5rem + 2px); /* Consistent height accounting for border */
+    transition: all 0.2s ease;  /* Smooth focus transitions */
+}
+
+/* Focus state with brand colors */
+.form-floating > .form-control:focus {
+    border-color: var(--rai-secondary);
+    box-shadow: 0 0 0 0.2rem rgba(195, 143, 93, 0.15); /* Brand-colored focus ring */
+}
+
+/* Placeholder styling */
+.form-floating > .form-control::placeholder {
+    color: #adb5bd; /* Bootstrap's placeholder color */
+    opacity: 1;
+}
+
+.form-floating > .form-control:focus::placeholder {
+    opacity: 0.6; /* Fade placeholder on focus for better UX */
+}
+
+/* Floating label positioning */
+.form-floating > label {
+    color: #6c757d;
+    padding: 1rem 0.75rem 0.25rem 0.75rem; /* Match input padding */
+}
+
+/* Show placeholder when field is empty and not focused */
+.form-floating > .form-control:not(:focus):placeholder-shown {
+    padding-top: 1.25rem;    /* Center text vertically */
+    padding-bottom: 0.75rem;
+}
+
+/* Animate label when field is empty and not focused */
+.form-floating > .form-control:not(:focus):placeholder-shown ~ label {
+    opacity: 0.65;
+    transform: scale(0.85) translateY(-0.75rem) translateX(0.15rem);
+    /* Creates the "floating" effect when field is empty */
+}
+
+/* ================================================================
+   CHECKBOX CONTROLS
+   ================================================================ */
+
+/* Brand-colored checkbox states */
+.form-check-input:checked {
+    background-color: var(--rai-secondary);
+    border-color: var(--rai-secondary);
+}
+
+.form-check-input:focus {
+    border-color: var(--rai-secondary);
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(195, 143, 93, 0.15); /* Consistent focus ring */
+}
+
+/* ================================================================
+   BUTTON COMPONENTS
+   ================================================================ */
+
+/* Primary action buttons (login, register, reset, etc.) */
+.btn-login,
+.btn-reset,
+.btn-register {
+    background-color: var(--rai-secondary);
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.875rem 2rem;
+    font-weight: 500;
+    color: var(--rai-primary);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(195, 143, 93, 0.2); /* Depth shadow */
+    /* Provides clear call-to-action styling */
+}
+
+/* Button hover effects with color inversion */
+.btn-login:hover,
+.btn-reset:hover,
+.btn-register:hover {
+    background-color: var(--rai-primary);
+    color: var(--rai-secondary);
+    transform: translateY(-1px);  /* Subtle lift effect */
+    box-shadow: 0 6px 20px rgba(0, 55, 69, 0.3); /* Enhanced shadow on hover */
+}
+
+/* Active state removes the lift effect */
+.btn-login:active,
+.btn-reset:active,
+.btn-register:active {
+    transform: translateY(0);
+}
+
+/* Full-width button for certain contexts */
+.btn-reset {
+    width: 100%;
+}
+
+/* ================================================================
+   NAVIGATION LINKS
+   ================================================================ */
+
+/* Secondary navigation links (forgot password, back to login, etc.) */
+.forgot-link,
+.login-link,
+.back-link {
+    color: var(--rai-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem; /* Space for icons */
+}
+
+/* Hover effects for navigation links */
+.forgot-link:hover,
+.login-link:hover,
+.back-link:hover {
+    color: var(--rai-primary);
+    text-decoration: none;
+}
+
+/* Specific hover animations for different link types */
+.back-link:hover {
+    transform: translateX(-2px); /* Subtle left movement suggests "going back" */
+}
+
+.login-link:hover {
+    transform: translateX(-2px); /* Consistent with back link */
+}
+
+.forgot-link:hover {
+    text-decoration: underline; /* Traditional link behavior for forgot password */
+}
+
+/* ================================================================
+   CONTENT SECTIONS & CONTAINERS
+   ================================================================ */
+
+/* Registration prompt section */
+.register-section {
+    background-color: rgba(195, 143, 93, 0.05);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    text-align: center;
+    margin-top: 1.5rem;
+    /* Encourages account creation for new users */
+}
+
+.register-link {
+    color: var(--rai-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.register-link:hover {
+    color: var(--rai-primary);
+    text-decoration: underline;
+}
+
+/* Back navigation section */
+.back-section {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef; /* Visual separator */
+}
+
+/* Login section (used on register page for existing users) */
+.login-section {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+/* ================================================================
+   ANIMATIONS & TRANSITIONS
+   ================================================================ */
+
+/* Main entry animation for auth cards */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95); /* Subtle scale + movement */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ================================================================
+   RESPONSIVE DESIGN - MOBILE FIRST
+   ================================================================
+
+   Mobile optimizations following Bootstrap 5.3 mobile-first principles.
+   Breakpoint: 576px and below (small devices)
+   ================================================================ */
+
+@media (max-width: 576px) {
+    /* Tighter container padding on mobile */
+    .login-container {
+        padding: 0.75rem;
+    }
+
+    /* More vertical spacing on mobile */
+    .chat-bubble-card {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Full-width buttons on mobile for easier touch targets */
+    .btn-login,
+    .btn-register {
+        width: 100%;
+    }
+
+    /* Stack login page elements vertically on mobile */
+    .login-page .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    /* Center forgot password link on mobile */
+    .login-page .forgot-link {
+        text-align: center;
+    }
+}
+
+/* ================================================================
+   PAGE-SPECIFIC STYLES
+   ================================================================
+
+   Styles that only apply to specific authentication pages.
+   Uses body classes for targeting (e.g., .pending-page, .verify-page)
+   ================================================================ */
+
+/* ----------------------------------------------------------------
+   PENDING APPROVAL PAGE
+   ---------------------------------------------------------------- */
+
+.pending-page .btn-primary {
+    background-color: var(--rai-secondary);
+    border-color: var(--rai-secondary);
+    color: var(--rai-primary);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(195, 143, 93, 0.2);
+}
+
+.pending-page .btn-primary:hover {
+    background-color: var(--rai-primary);
+    border-color: var(--rai-primary);
+    color: var(--rai-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 55, 69, 0.3);
+}
+
+/* Custom alert styling for pending page */
+.pending-page .alert-info {
+    border-color: rgba(195, 143, 93, 0.2);
+    background-color: rgba(195, 143, 93, 0.05);
+}
+
+.pending-page .alert-info .alert-heading {
+    color: var(--rai-primary);
+    font-weight: 600;
+}
+
+/* ----------------------------------------------------------------
+   PASSWORD CONFIRMATION PAGE
+   ---------------------------------------------------------------- */
+
+.btn-confirm,
+.btn-reset-password {
+    background-color: var(--rai-secondary);
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.875rem 2rem;
+    font-weight: 500;
+    color: var(--rai-primary);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(195, 143, 93, 0.2);
+    width: 100%; /* Full width for security action */
+}
+
+.btn-confirm:hover,
+.btn-reset-password:hover {
+    background-color: var(--rai-primary);
+    color: var(--rai-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 55, 69, 0.3);
+}
+
+.btn-confirm:active,
+.btn-reset-password:active {
+    transform: translateY(0);
+}
+
+/* ----------------------------------------------------------------
+   EMAIL VERIFICATION PAGES
+   ---------------------------------------------------------------- */
+
+/* Helpful sections for email verification process */
+.email-trouble-section,
+.verification-actions {
+    background-color: rgba(195, 143, 93, 0.05);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    /* Provides guidance during email verification */
+}
+
+/* Resend email button */
+.btn-resend {
+    background-color: var(--rai-secondary);
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    color: var(--rai-primary);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(195, 143, 93, 0.2);
+}
+
+.btn-resend:hover {
+    background-color: var(--rai-primary);
+    color: var(--rai-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 55, 69, 0.3);
+}
+
+.btn-resend:active {
+    transform: translateY(0);
+}
+
+/* Additional action buttons section */
+.additional-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(195, 143, 93, 0.2);
+}
+
+/* Secondary outline buttons */
+.btn-outline-secondary {
+    border-color: rgba(195, 143, 93, 0.3);
+    color: var(--rai-secondary);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--rai-secondary);
+    border-color: var(--rai-secondary);
+    color: var(--rai-primary);
+    transform: translateY(-1px);
+}
+
+/* Email delivery tips section */
+.verification-tips {
+    background-color: rgba(108, 117, 125, 0.1); /* Neutral background */
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    text-align: left; /* Left-aligned for readability */
+    /* Provides helpful tips for email delivery issues */
+}
+
+/* Mobile optimizations for email verification */
+@media (max-width: 576px) {
+    .btn-resend {
+        width: 100%;
+    }
+
+    .additional-actions .row .col-6 {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* ----------------------------------------------------------------
+   TWO-FACTOR AUTHENTICATION PAGE
+   ---------------------------------------------------------------- */
+
+/* 2FA action container */
+.two-factor-actions {
+    background-color: rgba(195, 143, 93, 0.05);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    /* Contains 2FA form and toggle options */
+}
+
+/* 2FA submit button */
+.btn-two-factor {
+    background-color: var(--rai-secondary);
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.875rem 2rem;
+    font-weight: 500;
+    color: var(--rai-primary);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(195, 143, 93, 0.2);
+    width: 100%; /* Full width for security action */
+}
+
+.btn-two-factor:hover {
+    background-color: var(--rai-primary);
+    color: var(--rai-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 55, 69, 0.3);
+}
+
+.btn-two-factor:active {
+    transform: translateY(0);
+}
+
+/* Toggle button for switching between auth code and recovery code */
+.btn-link-toggle {
+    background: none;
+    border: none;
+    color: var(--rai-secondary);
+    text-decoration: underline;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    /* Allows switching between 2FA input modes */
+}
+
+.btn-link-toggle:hover {
+    color: var(--rai-primary);
+    background-color: rgba(195, 143, 93, 0.1);
+    text-decoration: none;
+}
+
+/* ================================================================
+   END OF STYLESHEET
+   ================================================================
+
+   Total lines: ~500+
+   Components covered:
+   - Chat bubble cards with speech tail effect
+   - Floating label forms with smooth animations
+   - Brand-consistent buttons and links
+   - Responsive mobile-first design
+   - Page-specific authentication flows
+   - 2FA integration with Alpine.js support
+
+   Maintenance notes:
+   - All colors use CSS custom properties for easy theming
+   - Mobile-first responsive approach
+   - Consistent spacing and typography scale
+   - Animation durations standardized at 0.2s for micro-interactions
+   ================================================================ */

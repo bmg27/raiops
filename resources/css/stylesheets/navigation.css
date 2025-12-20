@@ -1,0 +1,454 @@
+.navigation,
+.navigation .nav-links li:hover,
+.navigation .nav-links li .sub-menu {
+    background-color: var(--theme-navigation-bg)!important;
+}
+
+.navigation {
+    font-family: inherit;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--rai-nav-open);
+    z-index: 1072;
+    transition: all 0.5s ease;
+}
+
+.navigation.close {
+    left: calc(0px - var(--rai-nav-open)); /* negative */
+}
+
+.navigation .logo-details {
+    height: calc(var(--rai-header-height) - .06rem); /* matches application header */
+    display: flex;
+    align-items: center;
+}
+
+.navigation .logo-details img {
+    font-size: 30px;
+    color: var(--theme-navigation-link);
+    width: 42px;
+    height: 42px;
+    margin: 0px 11px 0px 11px;
+    text-align: center;
+    line-height: var(--rai-header-height);
+    z-index:1;
+}
+
+.navigation .logo-details img.logo-text {
+    width: auto;
+    height: 50%;
+    transition: 0.3s ease;
+    transition-delay: 0.1s;
+    margin-left: -.5rem; /* match spacing with nav groups and sub menus */
+    filter: var(--theme-logo); /* change logo to match theme */
+}
+
+.navigation .nav-links {
+    height: 100%;
+    padding: 8px 0 0 0;
+    overflow: auto;
+}
+
+.navigation .nav-links::-webkit-scrollbar {
+    display: none;
+}
+
+.navigation .nav-links li {
+    position: relative;
+    list-style: none;
+    transition: all 0.4s ease;
+}
+
+.navigation .nav-links li:hover {
+    background: var(--bs-body-bg);
+}
+
+.navigation .nav-links li .link-icon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navigation .nav-links li i {
+    height: var(--rai-nav-spacing);
+    line-height: var(--rai-nav-spacing);
+    min-width: var(--rai-nav-close);
+    text-align: center;
+    color: var(--theme-navigation-link);
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.navigation .nav-links li.expand-group i.navigation-chevron {
+    transform: rotate(-180deg);
+}
+
+.navigation .nav-links li a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.navigation .nav-links li a .link-name {
+    font-weight: 700;
+    color: var(--theme-navigation-link);
+    transition: all 0.4s ease;
+    /**
+     * These are the nav groups when the menu is open.  Move them .5rem to the left.
+     */
+    margin-left: -.5rem;
+}
+
+.navigation .nav-links li .sub-menu {
+    /**
+     * These are the nav links when the menu is open.  Move them .5rem to the left.
+     * padding: 6px 6px 14px 64px;
+     */
+    padding: 4px 4px 4px 56px;
+    margin-top: -10px;
+    display: none;
+}
+
+.navigation .nav-links li.expand-group .sub-menu {
+    display: block;
+}
+
+.navigation .nav-links li .sub-menu a {
+    color: var(--theme-navigation-link);
+    padding: .25rem 0;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.navigation .nav-links li .sub-menu a:not(.link-name):hover {
+    opacity: 1;
+    color: var(--theme-navigation-link-active)!important;
+}
+
+.navigation .nav-links li .sub-menu .link-name {
+    display: none;
+}
+
+.navigation .nav-links li .sub-menu.blank {
+    opacity: 1;
+    pointer-events: auto;
+    padding: 3px 20px 6px 16px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.navigation .nav-links li:hover .sub-menu.blank {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.navigation-item {
+    color: var(--theme-navigation-link);
+}
+
+.navigation-item:hover,
+.navigation-item.active {
+    color: var(--theme-navigation-link-active)!important;
+}
+
+.navigation .menu-button {
+    /** hide the navigation menu button on mobile **/
+    display: none;
+}
+
+/** this only applies when .menu-button is in .application, i.e. not in nav **/
+.navigation ~ .application > .menu-button {
+    position: fixed;
+    top: 0;
+    left: var(--rai-nav-open);
+    line-height: var(--rai-header-height);
+    z-index:1072;
+    transition: all 0.4s ease;
+}
+
+.navigation.close ~ .application > .menu-button {
+    left: 0;
+}
+
+.mobile-profile-link {
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.mobile-profile-link img {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--bs-secondary);
+    border-radius: 50%;
+}
+
+.mobile-profile-link i.fs-3::before {
+    vertical-align: -0.5rem;
+}
+
+/* ========================================
+   GRANDCHILDREN MENU STYLES - Option B: Minimal Indent + Opacity
+   ======================================== */
+
+/* Parent item that contains grandchildren */
+.navigation .nav-links li .sub-menu .grandparent-item {
+    position: relative;
+}
+
+/* Child link with grandchildren - has chevron */
+.navigation .nav-links li .sub-menu .has-grandchildren {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    color: var(--theme-navigation-link);
+}
+
+/* Chevron icon for grandchildren toggle */
+.navigation .nav-links li .sub-menu .grandchild-chevron {
+    font-size: 12px;
+    margin-left: 0.5rem;
+    transition: transform 0.3s ease;
+    opacity: 0.7;
+}
+
+.navigation .nav-links li .sub-menu .grandchild-chevron.rotated {
+    transform: rotate(-180deg);
+}
+
+/* Grandchildren menu container - minimal indent */
+.navigation .nav-links li .sub-menu .grandchild-menu {
+    list-style: none;
+    padding-left: 0.35rem; /* Minimal indent */
+    margin-top: 0.15rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Individual grandchild item - same color as regular child items */
+.navigation .nav-links li .sub-menu .grandchild-item {
+    padding: 0.25rem 0;
+    font-weight: 400;
+    color: var(--theme-navigation-link);
+    opacity: 1; /* Same as regular child items */
+    transition: all 0.2s ease;
+}
+
+.navigation .nav-links li .sub-menu .grandchild-item:hover {
+    opacity: 1;
+    color: var(--theme-navigation-link-active)!important;
+}
+
+.navigation .nav-links li .sub-menu .grandchild-item.active {
+    color: var(--theme-navigation-link-active)!important;
+    font-weight: 600;
+    opacity: 1;
+}
+
+
+@media (min-width: 992px) {
+
+    /**
+     * Only close navigation in desktop
+     */
+    .navigation.open-on-load {
+        left: 0;
+    }
+
+    .navigation:not(.open-on-load).close {
+        left: 0;
+        width: var(--rai-nav-close);
+        /* Don't use overflow: hidden - we need sub-menu to extend beyond nav */
+    }
+    
+    .navigation .menu-button {
+        /** This is the menu button on desktop next to the logo **/
+        display: inline;
+    }
+
+    .navigation.logo-details {
+        width: 100%;
+    }
+
+    .navigation:not(.open-on-load).close .logo-details .logo-name, 
+    .navigation:not(.open-on-load).close .logo-details img.logo-text {
+        transition-delay: 0s;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links {
+        overflow: visible;
+        position: relative;
+        /* Ensure nav-links container respects parent boundaries */
+        width: 100%;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li .link-icon {
+        display: block
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links i.navigation-chevron {
+        display: none;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li a .link-name {
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li {
+        /* Ensure li doesn't extend beyond nav boundaries */
+        position: relative;
+        /* Constrain li to nav width - sub-menu will be positioned absolutely outside */
+        width: 100%;
+        overflow: visible;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li .sub-menu {
+        /**
+         * This is the sub-menu when the navigation is collapsed
+         */
+        position: absolute;
+        left: 100%;
+        top: 0;
+        margin-top: 0;
+        margin-left: 0; /* No gap - sub-menu should connect to nav to prevent hover gaps */
+        padding: .5rem 2rem 1rem 1rem;
+        border-radius: 0 6px 6px 0;
+        opacity: 0;
+        display: block;
+        pointer-events: none !important; /* CRITICAL: Force disable all interactions when hidden */
+        transition: opacity 0.15s ease, visibility 0s linear 0.15s;
+        visibility: hidden;
+        z-index: 1073; /* Ensure it's above nav but below modals */
+        /* Ensure sub-menu doesn't interfere when hidden */
+        will-change: opacity, visibility;
+
+        border-top: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+        border-right: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+        border-bottom: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+    }
+    
+    /* Only enable interactions when parent li is hovered - this is the key fix */
+    .navigation:not(.open-on-load).close .nav-links li:hover > .sub-menu {
+        opacity: 1;
+        pointer-events: auto !important; /* Enable interactions when visible */
+        visibility: visible;
+        transition: opacity 0.2s ease, visibility 0s;
+    }
+    
+    /* Keep sub-menu visible when hovering directly over it (allows mouse movement from nav to sub-menu) */
+    .navigation:not(.open-on-load).close .nav-links li .sub-menu:hover {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+    }
+    
+    /* CRITICAL: Ensure sub-menu is completely disabled when parent is not hovered AND sub-menu is not hovered */
+    .navigation:not(.open-on-load).close .nav-links li:not(:hover) .sub-menu:not(:hover) {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+    }
+    
+    .navigation:not(.open-on-load).close .nav-links li .sub-menu .link-name {
+        /**
+         * These are the nav groups when the menu is closed.
+         */
+        display: block;
+        opacity: 1;
+        font-weight: 700;
+        color: var(--theme-navigation-link);
+        white-space: nowrap;
+    }
+    
+    /* ===== COLLAPSED MODE: Grandchildren Styles ===== */
+    
+    /* Hide the grandchild chevron in collapsed mode - not needed */
+    .navigation.close .nav-links li .sub-menu .grandchild-chevron {
+        display: none;
+    }
+    
+    /* Hide grandchildren by default in collapsed mode when parent is not hovered */
+    .navigation.close .nav-links li:not(:hover) .sub-menu:not(:hover) .grandchild-menu {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Show grandchildren when parent li is hovered - THIS IS THE KEY FIX */
+    .navigation.close .nav-links li:hover .sub-menu .grandchild-menu {
+        display: block !important;
+        padding-left: 0.5rem !important;
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    /* Also show grandchildren when hovering directly over the sub-menu (allows mouse movement from nav to sub-menu) */
+    .navigation.close .nav-links li .sub-menu:hover .grandchild-menu {
+        display: block !important;
+        padding-left: 0.5rem !important;
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    /* Make child with grandchildren look like regular text in collapsed mode */
+    .navigation.close .nav-links li .sub-menu .has-grandchildren {
+        cursor: default;
+        pointer-events: none; /* Prevent clicking in collapsed mode */
+        font-weight: 600;
+    }
+    
+    /* Grandchildren in collapsed flyout */
+    .navigation.close .nav-links li .sub-menu .grandchild-item {
+        opacity: 1; /* Same as regular child items */
+        font-size: 0.95rem;
+        /* pointer-events will be inherited from parent sub-menu */
+    }
+    
+    /* Grandchildren in collapsed flyout - hover effects only when sub-menu is visible */
+    .navigation.close .nav-links li:hover .sub-menu .grandchild-item:hover {
+        opacity: 1;
+        color: var(--theme-navigation-link-active)!important;
+    }
+    
+    .navigation:not(.open-on-load).close ~ .application {
+        margin-left: var(--rai-nav-close);
+    }
+
+    .navigation.open-on-load ~ .application > .menu-button {
+        left: var(--rai-nav-open) !important;
+    }
+
+    .navigation:not(.open-on-load).close ~ .application > .menu-button {
+        left: var(--rai-nav-close);
+    }
+
+    .navigation .menu-button {
+        /** This is the menu button on desktop next to the logo **/
+        visibility: visible;
+    }
+}

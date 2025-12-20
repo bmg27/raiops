@@ -1,0 +1,198 @@
+[
+    {
+        "parent_id": 72,
+        "parent_title": "Sandbox",
+        "items": [
+            {
+                "id": 87,
+                "title": "Time Entry Search",
+                "url": "\/utils\/time-entry-search",
+                "icon": null,
+                "order": 0,
+                "super_admin_append": null,
+                "permission_id": 199,
+                "permission_name": "utils.time-entry-search.view"
+            },
+            {
+                "id": 108,
+                "title": "Menu\/Perm Sync",
+                "url": "admin\/database-sync",
+                "icon": null,
+                "order": 1,
+                "super_admin_append": null,
+                "permission_id": 336,
+                "permission_name": "admin.menu-sync.manage"
+            },
+            {
+                "id": 105,
+                "title": "Schedule Runner",
+                "url": "\/admin\/schedule-runner",
+                "icon": null,
+                "order": 40,
+                "super_admin_append": null,
+                "permission_id": 218,
+                "permission_name": "schedule.runner"
+            },
+            {
+                "id": 109,
+                "title": "Dashboard Manager",
+                "url": "\/dashboard-manager",
+                "icon": null,
+                "order": 50,
+                "super_admin_append": null,
+                "permission_id": 224,
+                "permission_name": "dashboard.manager.manage"
+            }
+        ]
+    },
+    {
+        "parent_id": 113,
+        "parent_title": "Tagging",
+        "items": [
+            {
+                "id": 91,
+                "title": "GPT Tagger",
+                "url": "\/tagging\/gpt-api-manager",
+                "icon": null,
+                "order": 0,
+                "super_admin_append": null,
+                "permission_id": 200,
+                "permission_name": "tagger.gpt.manage"
+            },
+            {
+                "id": 93,
+                "title": "Menu Item Tagger",
+                "url": "\/tagging\/menu-item-tagger",
+                "icon": null,
+                "order": 1,
+                "super_admin_append": null,
+                "permission_id": 61,
+                "permission_name": "tagger.menuitem.manage"
+            },
+            {
+                "id": 75,
+                "title": "Role Tagger",
+                "url": "\/tagging\/role-tagger",
+                "icon": null,
+                "order": 2,
+                "super_admin_append": null,
+                "permission_id": 65,
+                "permission_name": "tagger.role.manage"
+            },
+            {
+                "id": 71,
+                "title": "Vendor Item Tagger",
+                "url": "\/tagging\/vendor-item-tagger",
+                "icon": null,
+                "order": 3,
+                "super_admin_append": null,
+                "permission_id": 272,
+                "permission_name": "tagger.vendoritem.manage"
+            }
+        ]
+    },
+    {
+        "parent_id": 119,
+        "parent_title": "Tenants",
+        "items": [
+            {
+                "id": 120,
+                "title": "Manage",
+                "url": "\/admin\/tenants",
+                "icon": null,
+                "order": 0,
+                "super_admin_append": null,
+                "permission_id": 233,
+                "permission_name": "tenant.manage"
+            }
+        ]
+    },
+    {
+        "parent_id": 62,
+        "parent_title": "Admin",
+        "items": [
+            {
+                "id": 156,
+                "title": "Sales",
+                "url": "#",
+                "icon": null,
+                "order": 0,
+                "super_admin_append": null,
+                "permission_id": null,
+                "permission_name": null
+            },
+            {
+                "id": 158,
+                "title": "Change Log Manager",
+                "url": "\/admin\/changelog",
+                "icon": "log",
+                "order": 0,
+                "super_admin_append": null,
+                "permission_id": 348,
+                "permission_name": "admin.changelog.manage"
+            },
+            {
+                "id": 113,
+                "title": "Tagging",
+                "url": "#",
+                "icon": null,
+                "order": 3,
+                "super_admin_append": null,
+                "permission_id": null,
+                "permission_name": null
+            },
+            {
+                "id": 63,
+                "title": "Bugs\/Feature Reqs",
+                "url": "\/admin\/bugs-features",
+                "icon": null,
+                "order": 4,
+                "super_admin_append": null,
+                "permission_id": 329,
+                "permission_name": "bugs.manage"
+            },
+            {
+                "id": 107,
+                "title": "Dashboard Builder",
+                "url": "\/dashboard-builder",
+                "icon": null,
+                "order": 7,
+                "super_admin_append": null,
+                "permission_id": 222,
+                "permission_name": "dashboard.builder.manage"
+            }
+        ]
+    },
+    {
+        "parent_id": 156,
+        "parent_title": "Sales",
+        "items": [
+            {
+                "id": 157,
+                "title": "Prospects",
+                "url": "\/admin\/prospects",
+                "icon": null,
+                "order": 0,
+                "super_admin_append": null,
+                "permission_id": 347,
+                "permission_name": "admin.prospects.manage"
+            }
+        ]
+    },
+    {
+        "parent_id": 114,
+        "parent_title": "Shift Notes",
+        "items": [
+            {
+                "id": 102,
+                "title": "Global",
+                "url": "\/admin\/shift-notes-global",
+                "icon": null,
+                "order": 55,
+                "super_admin_append": null,
+                "permission_id": 334,
+                "permission_name": "shift-notes.global.manage"
+            }
+        ]
+    }
+]
