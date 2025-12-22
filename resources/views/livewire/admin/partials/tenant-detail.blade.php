@@ -108,7 +108,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse($liveData['users']->take(10) as $user)
+                                        @forelse($liveData['users'] as $user)
                                             <tr>
                                                 <td class="small">{{ $user->name ?? '—' }}</td>
                                                 <td class="small">{{ $user->email ?? '—' }}</td>
