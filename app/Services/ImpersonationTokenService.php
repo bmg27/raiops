@@ -71,9 +71,11 @@ class ImpersonationTokenService
         $rds = $tenant->rdsInstance;
         
         // Build the URL to RAI's impersonation endpoint
+        // Add timestamp to prevent browser caching of the URL
         $baseUrl = rtrim($rds->app_url, '/');
+        $timestamp = now()->timestamp;
         
-        return $baseUrl . '/rainbo-impersonate?token=' . urlencode($token);
+        return $baseUrl . '/rainbo-impersonate?token=' . urlencode($token) . '&_t=' . $timestamp;
     }
 
     /**

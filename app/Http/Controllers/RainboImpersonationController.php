@@ -98,9 +98,13 @@ class RainboImpersonationController extends Controller
         } catch (\UnexpectedValueException $e) {
             Log::warning('RAINBO impersonation: invalid token', [
                 'error' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'token_preview' => $token ? substr($token, 0, 50) . '...' : 'null',
+                'token_length' => $token ? strlen($token) : 0,
                 'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
             ]);
-            abort(403, 'Invalid impersonation token');
+            abort(403, 'Invalid impersonation token. Please try again from RAINBO.');
             
         } catch (\Exception $e) {
             Log::error('RAINBO impersonation failed', [
