@@ -23,12 +23,22 @@ class RainboImpersonationController extends Controller
         }
 
         try {
+            // Validate impersonation secret is configured
+            $secret = config('rainbo.impersonation_secret');
+            if (empty($secret) || !is_string($secret)) {
+                Log::error('RAINBO impersonation: secret not configured', [
+                    'config_value' => $secret,
+                    'env_set' => !empty(env('RAINBO_IMPERSONATION_SECRET')),
+                ]);
+                abort(500, 'Impersonation is not properly configured. RAINBO_IMPERSONATION_SECRET must be set in .env');
+            }
+            
             // Decode and validate JWT
             // The rds_instance_id in the payload is routing information (which RDS database to connect to),
             // not a security boundary. Security is provided by JWT signature validation and expiration.
             $payload = JWT::decode(
                 $token, 
-                new Key(config('rainbo.impersonation_secret'), 'HS256')
+                new Key($secret, 'HS256')
             );
             
             // Find or create ghost admin user

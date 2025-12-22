@@ -136,8 +136,22 @@ class RainboImpersonationController extends Controller
                 abort(403, 'Invalid RDS instance for this deployment');
             }
             
-            // Find or create ghost admin user
-            $ghostUser = $this->findOrCreateGhostAdmin($payload);
+            // Find ghost admin user (must be pre-created via sync:ghost-users)
+            $ghostUser = $this->findGhostAdmin($payload);
+            
+            if (!$ghostUser) {
+                Log::error('RAINBO impersonation: ghost user not found', [
+                    'rainbo_admin_id' => $payload->rainbo_admin_id,
+                    'rds_instance_id' => $payload->rds_instance_id ?? null,
+                ]);
+                
+                // Return user-friendly error page instead of 500 error
+                return view('errors.ghost-user-missing', [
+                    'rainbo_admin_id' => $payload->rainbo_admin_id,
+                    'rds_instance_id' => $payload->rds_instance_id ?? null,
+                    'return_url' => $payload->return_url ?? config('rainbo.app_url'),
+                ])->with('error', 'Ghost user not found');
+            }
             
             // Log them in
             Auth::login($ghostUser);
@@ -223,33 +237,46 @@ class RainboImpersonationController extends Controller
     }
     
     /**
-     * Find or create a ghost admin user for RAINBO impersonation
+     * Find ghost admin user for RAINBO impersonation
+     * 
+     * Ghost users must be pre-created using: php artisan sync:ghost-users
+     * This method only finds existing users, it does not create them.
      */
-    protected function findOrCreateGhostAdmin(object $payload): User
+    protected function findGhostAdmin(object $payload): ?User
     {
         // Use a predictable email pattern for ghost admins
         $email = "rainbo-admin-{$payload->rainbo_admin_id}@system.internal";
         
-        $user = User::firstOrCreate(
-            ['email' => $email],
-            [
-                'name' => "RAINBO Admin #{$payload->rainbo_admin_id}",
-                'password' => Hash::make(Str::random(64)), // Unguessable password
-                'is_super_admin' => true,
-                'is_ghost_admin' => true,
-                'rainbo_admin_id' => $payload->rainbo_admin_id,
-                'tenant_id' => null, // Super admin, no tenant restriction
-                'status' => 'Active',
-            ]
-        );
+        $user = User::where('email', $email)
+            ->where('is_ghost_admin', true)
+            ->where('rainbo_admin_id', $payload->rainbo_admin_id)
+            ->first();
         
-        // Update the ghost user's rainbo_admin_id if it changed
-        if ($user->rainbo_admin_id !== $payload->rainbo_admin_id) {
-            $user->update(['rainbo_admin_id' => $payload->rainbo_admin_id]);
+        if ($user) {
+            // Update the ghost user's tenant_id for this impersonation session
+            if (isset($payload->remote_tenant_id)) {
+                $user->update(['tenant_id' => $payload->remote_tenant_id]);
+            }
+            
+            // Ensure correct settings
+            $updates = [];
+            if (!$user->is_super_admin) {
+                $updates['is_super_admin'] = true;
+            }
+            if ($user->status !== 'Active') {
+                $updates['status'] = 'Active';
+            }
+            if ($user->location_access !== 'All') {
+                $updates['location_access'] = 'All';
+            }
+            
+            if (!empty($updates)) {
+                $user->update($updates);
+            }
+            
+            // Touch updated_at for cleanup tracking
+            $user->touch();
         }
-        
-        // Touch updated_at for cleanup tracking
-        $user->touch();
         
         return $user;
     }
@@ -258,7 +285,93 @@ class RainboImpersonationController extends Controller
 
 ---
 
-## Step 5: Add Routes
+## Step 5: Create Error View for Missing Ghost Users
+
+Create a user-friendly error page that explains what needs to be done.
+
+File: `resources/views/errors/ghost-user-missing.blade.php`
+
+```blade
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost User Not Found - RAINBO Impersonation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Ghost User Not Found
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">
+                            The ghost user for RAINBO admin impersonation has not been created on this RDS instance.
+                        </p>
+                        
+                        <div class="alert alert-info">
+                            <h5><i class="bi bi-info-circle me-2"></i>What This Means</h5>
+                            <p class="mb-0">
+                                Before RAINBO admins can impersonate into this RAI instance, ghost users must be 
+                                created for each RAINBO admin account. This is a one-time setup step.
+                            </p>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <h5><i class="bi bi-tools me-2"></i>How to Fix This</h5>
+                            <p><strong>On the RAINBO server, run:</strong></p>
+                            <pre class="bg-dark text-light p-3 rounded"><code>php artisan sync:ghost-users</code></pre>
+                            
+                            <p class="mt-3">Or to sync a specific admin to this RDS instance:</p>
+                            <pre class="bg-dark text-light p-3 rounded"><code>php artisan sync:ghost-users --admin={{ $rainbo_admin_id ?? 'ID' }} --rds={{ $rds_instance_id ?? 'ID' }}</code></pre>
+                            
+                            <p class="mt-3 mb-0">
+                                <small>
+                                    <strong>Admin ID:</strong> {{ $rainbo_admin_id ?? 'N/A' }}<br>
+                                    <strong>RDS Instance ID:</strong> {{ $rds_instance_id ?? 'N/A' }}
+                                </small>
+                            </p>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            @if(isset($return_url))
+                            <a href="{{ $return_url }}" class="btn btn-primary">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Return to RAINBO
+                            </a>
+                            @endif
+                            <a href="/" class="btn btn-outline-secondary">
+                                <i class="bi bi-house me-2"></i>
+                                Go to Homepage
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center text-muted">
+                    <small>
+                        <i class="bi bi-shield-lock me-1"></i>
+                        This is a security feature to ensure proper setup before allowing impersonation.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+---
+
+## Step 6: Add Routes
 
 In `routes/web.php`:
 
