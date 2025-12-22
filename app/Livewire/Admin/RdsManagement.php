@@ -116,8 +116,17 @@ class RdsManagement extends Component
 
         // Use existing password if editing and no new password provided
         if ($this->editId && empty($this->password)) {
+            // Get the raw encrypted password from the database to preserve it
             $existing = RdsInstance::find($this->editId);
-            $rds->attributes['password'] = $existing->getAttributes()['password'];
+            $rawPassword = \Illuminate\Support\Facades\DB::table('rds_instances')
+                ->where('id', $this->editId)
+                ->value('password');
+            
+            // Set the raw encrypted password directly in attributes
+            $rds->setRawAttributes(
+                array_merge($rds->getAttributes(), ['password' => $rawPassword]),
+                true
+            );
         } else {
             $rds->password = $this->password;
         }

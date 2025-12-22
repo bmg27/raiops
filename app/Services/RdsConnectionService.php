@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\RdsInstance;
+use App\Models\TenantMaster;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -179,6 +180,253 @@ class RdsConnectionService
     }
 
     /**
+     * Get locations for a tenant from an RDS instance
+     */
+    public function getLocations(RdsInstance $rdsInstance, int $tenantId): \Illuminate\Support\Collection
+    {
+        try {
+            $db = $this->query($rdsInstance);
+            
+            $locations = $db->table('locations')
+                ->where('tenant_id', $tenantId)
+                ->orderBy('name')
+                ->get();
+
+            // Add alias to each location
+            foreach ($locations as $location) {
+                $alias = $db->table('location_aliases')
+                    ->where('location_id', $location->id)
+                    ->first();
+                $location->alias = $alias->name ?? null;
+            }
+
+            return $locations;
+        } catch (\Exception $e) {
+            Log::error("Failed to get locations from RDS {$rdsInstance->id}", [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+            ]);
+            return collect();
+        }
+    }
+
+    /**
+     * Get a single location by ID from an RDS instance
+     */
+    public function getLocation(RdsInstance $rdsInstance, int $locationId): ?object
+    {
+        try {
+            return $this->query($rdsInstance)
+                ->table('locations')
+                ->where('id', $locationId)
+                ->first();
+        } catch (\Exception $e) {
+            Log::error("Failed to get location from RDS {$rdsInstance->id}", [
+                'location_id' => $locationId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Create a location on an RDS instance
+     */
+    public function createLocation(RdsInstance $rdsInstance, int $tenantId, array $data): ?int
+    {
+        try {
+            $db = $this->query($rdsInstance);
+            
+            // Get the next location ID
+            $locationMax = $db->table('locations')->max('id') ?? 0;
+            $locationId = $locationMax + 1;
+
+            // Create location
+            $db->table('locations')->insert([
+                'id' => $locationId,
+                'name' => $data['name'],
+                'address' => $data['address'] ?? null,
+                'city' => $data['city'] ?? null,
+                'state' => $data['state'] ?? null,
+                'zip' => $data['zip'] ?? null,
+                'country' => $data['country'] ?? 'US',
+                'timezone' => $data['timezone'] ?? 'America/New_York',
+                'has_grouped_tips' => $data['has_grouped_tips'] ?? false,
+                'is_active' => $data['is_active'] ?? true,
+                'tenant_id' => $tenantId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Create location alias if provided
+            if (!empty($data['alias'])) {
+                $db->table('location_aliases')->insert([
+                    'name' => $data['alias'],
+                    'location_id' => $locationId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Create location map for Toast if provided
+            if (!empty($data['toast_location'])) {
+                $toastProvider = $db->table('providers')
+                    ->where('classname', 'App\\Classes\\Providers\\ToastProvider')
+                    ->first();
+
+                if ($toastProvider) {
+                    $db->table('location_maps')->insert([
+                        'external_id' => $data['toast_location'],
+                        'location_id' => $locationId,
+                        'provider_id' => $toastProvider->id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            return $locationId;
+        } catch (\Exception $e) {
+            Log::error("Failed to create location on RDS {$rdsInstance->id}", [
+                'tenant_id' => $tenantId,
+                'data' => $data,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Update a location on an RDS instance
+     */
+    public function updateLocation(RdsInstance $rdsInstance, int $locationId, array $data): bool
+    {
+        try {
+            $db = $this->query($rdsInstance);
+            
+            // Update location
+            $updateData = [
+                'name' => $data['name'],
+                'address' => $data['address'] ?? null,
+                'city' => $data['city'] ?? null,
+                'state' => $data['state'] ?? null,
+                'zip' => $data['zip'] ?? null,
+                'country' => $data['country'] ?? 'US',
+                'timezone' => $data['timezone'] ?? 'America/New_York',
+                'has_grouped_tips' => $data['has_grouped_tips'] ?? false,
+                'is_active' => $data['is_active'] ?? true,
+                'updated_at' => now(),
+            ];
+
+            $db->table('locations')
+                ->where('id', $locationId)
+                ->update($updateData);
+
+            // Update or create location alias
+            if (isset($data['alias'])) {
+                $existingAlias = $db->table('location_aliases')
+                    ->where('location_id', $locationId)
+                    ->first();
+
+                if ($existingAlias) {
+                    if (!empty($data['alias'])) {
+                        $db->table('location_aliases')
+                            ->where('location_id', $locationId)
+                            ->update([
+                                'name' => $data['alias'],
+                                'updated_at' => now(),
+                            ]);
+                    } else {
+                        $db->table('location_aliases')
+                            ->where('location_id', $locationId)
+                            ->delete();
+                    }
+                } elseif (!empty($data['alias'])) {
+                    $db->table('location_aliases')->insert([
+                        'name' => $data['alias'],
+                        'location_id' => $locationId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            // Update or create Toast location map
+            if (isset($data['toast_location'])) {
+                $toastProvider = $db->table('providers')
+                    ->where('classname', 'App\\Classes\\Providers\\ToastProvider')
+                    ->first();
+
+                if ($toastProvider) {
+                    $existingMap = $db->table('location_maps')
+                        ->where('location_id', $locationId)
+                        ->where('provider_id', $toastProvider->id)
+                        ->first();
+
+                    if ($existingMap) {
+                        if (!empty($data['toast_location'])) {
+                            $db->table('location_maps')
+                                ->where('location_id', $locationId)
+                                ->where('provider_id', $toastProvider->id)
+                                ->update([
+                                    'external_id' => $data['toast_location'],
+                                    'updated_at' => now(),
+                                ]);
+                        } else {
+                            $db->table('location_maps')
+                                ->where('location_id', $locationId)
+                                ->where('provider_id', $toastProvider->id)
+                                ->delete();
+                        }
+                    } elseif (!empty($data['toast_location'])) {
+                        $db->table('location_maps')->insert([
+                            'external_id' => $data['toast_location'],
+                            'location_id' => $locationId,
+                            'provider_id' => $toastProvider->id,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Failed to update location on RDS {$rdsInstance->id}", [
+                'location_id' => $locationId,
+                'data' => $data,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Delete a location from an RDS instance
+     */
+    public function deleteLocation(RdsInstance $rdsInstance, int $locationId): bool
+    {
+        try {
+            $db = $this->query($rdsInstance);
+            
+            // Delete related records first
+            $db->table('location_aliases')->where('location_id', $locationId)->delete();
+            $db->table('location_maps')->where('location_id', $locationId)->delete();
+            
+            // Delete location
+            $db->table('locations')->where('id', $locationId)->delete();
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Failed to delete location from RDS {$rdsInstance->id}", [
+                'location_id' => $locationId,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Get tenants from an RDS instance
      */
     public function getTenants(RdsInstance $rdsInstance): \Illuminate\Support\Collection
@@ -271,6 +519,52 @@ class RdsConnectionService
         }
 
         $this->activeConnections = [];
+    }
+
+    /**
+    * Switch to a specific RDS instance by ID (sets default connection)
+    */
+    public function switchToRdsByInstanceId(int $rdsInstanceId): bool
+    {
+        $instance = RdsInstance::find($rdsInstanceId);
+        if (!$instance) {
+            Log::warning('RdsConnectionService: RDS instance not found', ['rds_instance_id' => $rdsInstanceId]);
+            return false;
+        }
+
+        // Configure connections
+        $this->configureConnection($instance);
+
+        $connectionName = $this->getConnectionName($instance->id);
+        DB::setDefaultConnection($connectionName);
+        Config::set('database.default', $connectionName);
+
+        // Store in session for later requests
+        session(['current_rds_instance_id' => $instance->id]);
+        session(['current_rds_connection' => $connectionName]);
+
+        Log::info('RdsConnectionService: switched default connection', [
+            'rds_instance_id' => $instance->id,
+            'connection_name' => $connectionName,
+        ]);
+
+        return true;
+    }
+
+    /**
+    * Switch to RDS instance by tenant_master id
+    */
+    public function switchToRdsByTenant(int $tenantMasterId): bool
+    {
+        $tenant = TenantMaster::find($tenantMasterId);
+        if (!$tenant || !$tenant->rds_instance_id) {
+            Log::warning('RdsConnectionService: tenant or rds_instance_id not found', [
+                'tenant_master_id' => $tenantMasterId,
+            ]);
+            return false;
+        }
+
+        return $this->switchToRdsByInstanceId($tenant->rds_instance_id);
     }
 }
 
