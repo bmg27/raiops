@@ -8,6 +8,10 @@ use App\Models\AuditLog;
 use App\Services\RdsConnectionService;
 use App\Services\ImpersonationTokenService;
 use App\Services\TenantCreationService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -84,6 +88,23 @@ class TenantMultiRds extends Component
     public bool $locationHasGroupedTips = false;
     public ?string $locationError = null;
 
+    // Provider/Integration Management
+    public bool $showProviderSettingsModal = false;
+    public ?int $selectedProviderId = null;
+    public string $providerSettingsText = '';
+    public bool $providerActive = true;
+    public array $integrationFields = []; // dynamic key => value for selected provider
+    public ?int $selectedLocationId = null; // For location-level integrations
+    public array $tenantLocations = []; // Available locations for the selected tenant (id => name)
+    public array $locationMaps = []; // Location map external_ids keyed by location_id
+    public bool $isEditingIntegration = false;
+    
+    // Available providers (catalog) id => name (cached per RDS)
+    public array $availableProviders = [];
+    public bool $selectedProviderHasLocation = false;
+    public array $selectedProviderFieldSchema = [];
+    public ?string $selectedProviderLabel = null;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => 'all'],
@@ -154,6 +175,9 @@ class TenantMultiRds extends Component
                 'location_count' => $locationCount,
                 'fetched_at' => now()->toDateTimeString(),
             ];
+
+            // Load tenant locations for integration management
+            $this->loadTenantLocations();
 
             // Update cached counts in tenant_master
             $tenant->update([
@@ -749,12 +773,746 @@ class TenantMultiRds extends Component
             $selectedTenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
         }
 
+        // Load providers catalog if viewing tenant details
+        if ($this->selectedTenantId) {
+            $this->loadAvailableProviders();
+        }
+
         return view('livewire.admin.tenant-multi-rds', [
             'tenants' => $tenants,
             'selectedTenant' => $selectedTenant,
             'rdsOptions' => $this->rdsOptions,
             'rdsInstances' => RdsInstance::active()->orderBy('name')->get(),
         ])->layout('layouts.rai');
+    }
+
+    // ========== PROVIDER/INTEGRATION MANAGEMENT ==========
+
+    /**
+     * Load available providers catalog from providers database (cached per RDS)
+     */
+    protected function loadAvailableProviders(): void
+    {
+        if (!$this->selectedTenantId) {
+            $this->availableProviders = [];
+            return;
+        }
+
+        $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+        if (!$tenant || !$tenant->rdsInstance || !$tenant->rdsInstance->providers_database) {
+            $this->availableProviders = [];
+            return;
+        }
+
+        $rds = $tenant->rdsInstance;
+        $cacheKey = "providers_catalog_rds_{$rds->id}";
+
+        $this->availableProviders = Cache::remember($cacheKey, now()->addHours(24), function () use ($rds) {
+            try {
+                $service = app(RdsConnectionService::class);
+                $providersConn = $service->getProvidersConnectionName($rds->id);
+                
+                $providers = DB::connection($providersConn)
+                    ->table('providers')
+                    ->where('is_active', true)
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'has_location']);
+
+                return $providers->pluck('name', 'id')->toArray();
+            } catch (\Exception $e) {
+                \Log::error('Failed to load providers catalog', [
+                    'rds_id' => $rds->id,
+                    'error' => $e->getMessage(),
+                ]);
+                return [];
+            }
+        });
+    }
+
+    /**
+     * Get provider settings/integrations for the selected tenant
+     * Public method so it can be called from the view
+     */
+    public function getProviderSettings(): array
+    {
+        if (!$this->selectedTenantId) {
+            return [];
+        }
+
+        $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+        if (!$tenant || !$tenant->rdsInstance || !$tenant->rdsInstance->providers_database) {
+            return [];
+        }
+
+        try {
+            $rds = $tenant->rdsInstance;
+            $service = app(RdsConnectionService::class);
+            $providersConn = $service->getProvidersConnectionName($rds->id);
+
+            // Get remote location IDs from live data or query
+            $remoteLocationIds = [];
+            if ($this->liveData && isset($this->liveData['locations'])) {
+                $remoteLocationIds = collect($this->liveData['locations'])->pluck('id')->toArray();
+            }
+
+            // Query tenant-level integrations
+            $tenantIntegrations = DB::connection($providersConn)
+                ->table('integrations')
+                ->join('providers', 'integrations.provider_id', '=', 'providers.id')
+                ->where('integrations.integrated_type', 'App\Models\Rai\Tenant')
+                ->where('integrations.integrated_id', $tenant->remote_tenant_id)
+                ->select('integrations.*', 'providers.name as provider_name', 'providers.has_location')
+                ->get();
+
+            // Query location-level integrations
+            // Note: location names come from liveData, not from providers DB join
+            $locationIntegrations = collect();
+            if (!empty($remoteLocationIds)) {
+                $locationIntegrations = DB::connection($providersConn)
+                    ->table('integrations')
+                    ->join('providers', 'integrations.provider_id', '=', 'providers.id')
+                    ->where('integrations.integrated_type', 'App\Models\Rai\Location')
+                    ->whereIn('integrations.integrated_id', $remoteLocationIds)
+                    ->select(
+                        'integrations.*',
+                        'providers.name as provider_name',
+                        'providers.has_location'
+                    )
+                    ->get();
+                
+                // Add location names from liveData
+                $locationMap = [];
+                if ($this->liveData && isset($this->liveData['locations'])) {
+                    foreach ($this->liveData['locations'] as $location) {
+                        $locationMap[$location->id] = $location->name ?? "Location {$location->id}";
+                    }
+                }
+                
+                $locationIntegrations = $locationIntegrations->map(function($integration) use ($locationMap) {
+                    $integration->location_id = $integration->integrated_id;
+                    $integration->location_name = $locationMap[$integration->integrated_id] ?? "Location {$integration->integrated_id}";
+                    return $integration;
+                });
+            }
+
+            $result = [];
+            
+            // Add tenant-level integrations
+            foreach ($tenantIntegrations as $integration) {
+                $result[] = [
+                    'id' => $integration->id,
+                    'provider_id' => $integration->provider_id,
+                    'provider_name' => $integration->provider_name,
+                    'is_location_level' => false,
+                    'location_id' => null,
+                    'location_name' => null,
+                    'is_active' => (bool) $integration->is_active,
+                    'updated_at' => $integration->updated_at,
+                ];
+            }
+
+            // Add location-level integrations
+            foreach ($locationIntegrations as $integration) {
+                $result[] = [
+                    'id' => $integration->id,
+                    'provider_id' => $integration->provider_id,
+                    'provider_name' => $integration->provider_name,
+                    'is_location_level' => true,
+                    'location_id' => $integration->location_id,
+                    'location_name' => $integration->location_name,
+                    'is_active' => (bool) $integration->is_active,
+                    'updated_at' => $integration->updated_at,
+                ];
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            \Log::error('Failed to get provider settings', [
+                'tenant_id' => $this->selectedTenantId,
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Open provider settings modal
+     */
+    public function openProviderSettingsModal(?int $providerId = null, ?int $locationId = null): void
+    {
+        if (!auth()->user()?->hasRainboPermission('tenant.manage')) {
+            abort(403, 'You do not have permission to manage integrations.');
+        }
+
+        $this->loadAvailableProviders();
+        $this->resetProviderSettingsForm();
+        $this->selectedLocationId = $locationId;
+        
+        // Load tenant locations
+        if ($this->selectedTenantId) {
+            $this->loadTenantLocations();
+        }
+
+        if ($providerId !== null) {
+            $this->selectedProviderId = $providerId;
+            $this->refreshSelectedProviderMeta($providerId);
+            $this->loadLocationMaps();
+
+            $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+            if (!$tenant || !$tenant->rdsInstance || !$tenant->rdsInstance->providers_database) {
+                $this->dispatch('notify', type: 'error', message: 'Providers database not configured for this RDS.');
+                return;
+            }
+
+            $rds = $tenant->rdsInstance;
+            $service = app(RdsConnectionService::class);
+            $providersConn = $service->getProvidersConnectionName($rds->id);
+
+            $provider = DB::connection($providersConn)
+                ->table('providers')
+                ->where('id', $providerId)
+                ->first();
+
+            if (!$provider) {
+                $this->dispatch('notify', type: 'error', message: 'Provider not found.');
+                return;
+            }
+
+            if ($provider->has_location) {
+                if ($locationId !== null) {
+                    $integration = DB::connection($providersConn)
+                        ->table('integrations')
+                        ->where('provider_id', $providerId)
+                        ->where('integrated_type', 'App\Models\Rai\Location')
+                        ->where('integrated_id', $locationId)
+                        ->first();
+
+                    if ($integration) {
+                        $this->isEditingIntegration = true;
+                        $this->selectedLocationId = $locationId;
+                        $settings = $this->decryptSettings($integration->settings);
+                        $this->providerSettingsText = json_encode($settings, JSON_PRETTY_PRINT);
+                        $this->providerActive = (bool) $integration->is_active;
+                        $this->populateIntegrationFieldsFromSettings($providerId, $settings, $providersConn);
+                    } else {
+                        $this->populateIntegrationFieldsFromSettings($providerId, [], $providersConn);
+                    }
+                } else {
+                    $this->populateIntegrationFieldsFromSettings($providerId, [], $providersConn);
+                }
+            } else {
+                $integration = DB::connection($providersConn)
+                    ->table('integrations')
+                    ->where('provider_id', $providerId)
+                    ->where('integrated_type', 'App\Models\Rai\Tenant')
+                    ->where('integrated_id', $tenant->remote_tenant_id)
+                    ->first();
+
+                if ($integration) {
+                    $this->isEditingIntegration = true;
+                    $settings = $this->decryptSettings($integration->settings);
+                    $this->providerSettingsText = json_encode($settings, JSON_PRETTY_PRINT);
+                    $this->providerActive = (bool) $integration->is_active;
+                    $this->populateIntegrationFieldsFromSettings($providerId, $settings, $providersConn);
+                } else {
+                    $this->populateIntegrationFieldsFromSettings($providerId, [], $providersConn);
+                }
+            }
+        }
+
+        $this->showProviderSettingsModal = true;
+    }
+
+    /**
+     * Load tenant locations from live data
+     */
+    protected function loadTenantLocations(): void
+    {
+        $this->tenantLocations = [];
+
+        if ($this->liveData && isset($this->liveData['locations'])) {
+            foreach ($this->liveData['locations'] as $location) {
+                $this->tenantLocations[$location->id] = $location->name ?? "Location {$location->id}";
+            }
+        }
+    }
+
+    /**
+     * Load location maps for the selected provider
+     */
+    protected function loadLocationMaps(): void
+    {
+        $this->locationMaps = [];
+
+        if (!$this->selectedProviderId || empty($this->tenantLocations)) {
+            return;
+        }
+
+        $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+        if (!$tenant || !$tenant->rdsInstance || !$tenant->rdsInstance->providers_database) {
+            return;
+        }
+
+        try {
+            $rds = $tenant->rdsInstance;
+            $service = app(RdsConnectionService::class);
+            $raiConn = $service->getConnection($rds);
+            $providersConn = $service->getProvidersConnectionName($rds->id);
+
+            // Get provider by classname to find provider_id for location_maps
+            $provider = DB::connection($providersConn)
+                ->table('providers')
+                ->where('id', $this->selectedProviderId)
+                ->first();
+
+            if (!$provider) {
+                return;
+            }
+
+            $locationIds = array_keys($this->tenantLocations);
+
+            // Query location_maps from RAI database
+            $maps = DB::connection($raiConn)
+                ->table('location_maps')
+                ->where('provider_id', $this->selectedProviderId)
+                ->whereIn('location_id', $locationIds)
+                ->get();
+
+            foreach ($maps as $map) {
+                $this->locationMaps[$map->location_id] = $map->external_id ?? '';
+            }
+
+            // Initialize empty values for locations without maps
+            foreach ($locationIds as $locationId) {
+                if (!isset($this->locationMaps[$locationId])) {
+                    $this->locationMaps[$locationId] = '';
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to load location maps', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Refresh selected provider metadata
+     */
+    protected function refreshSelectedProviderMeta(?int $providerId = null): void
+    {
+        if (!$providerId || !$this->selectedTenantId) {
+            $this->selectedProviderLabel = null;
+            $this->selectedProviderHasLocation = false;
+            $this->selectedProviderFieldSchema = [];
+            return;
+        }
+
+        $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+        if (!$tenant || !$tenant->rdsInstance || !$tenant->rdsInstance->providers_database) {
+            return;
+        }
+
+        try {
+            $rds = $tenant->rdsInstance;
+            $service = app(RdsConnectionService::class);
+            $providersConn = $service->getProvidersConnectionName($rds->id);
+
+            $provider = DB::connection($providersConn)
+                ->table('providers')
+                ->where('id', $providerId)
+                ->first();
+
+            if ($provider) {
+                $this->selectedProviderLabel = $provider->name;
+                $this->selectedProviderHasLocation = (bool) $provider->has_location;
+                $this->selectedProviderFieldSchema = is_array($provider->field_schema) 
+                    ? $provider->field_schema 
+                    : (json_decode($provider->field_schema, true) ?: []);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to refresh provider meta', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Populate integration fields from settings
+     */
+    protected function populateIntegrationFieldsFromSettings(int $providerId, array $settings, string $providersConn): void
+    {
+        if (!$this->selectedTenantId) {
+            $this->integrationFields = [];
+            return;
+        }
+
+        $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+        if (!$tenant || !$tenant->rdsInstance || !$tenant->rdsInstance->providers_database) {
+            $this->integrationFields = [];
+            return;
+        }
+
+        try {
+            $provider = DB::connection($providersConn)
+                ->table('providers')
+                ->where('id', $providerId)
+                ->first();
+
+            if (!$provider) {
+                $this->integrationFields = [];
+                return;
+            }
+
+            $fieldSchema = is_array($provider->field_schema) 
+                ? $provider->field_schema 
+                : (json_decode($provider->field_schema, true) ?: []);
+
+            $this->integrationFields = [];
+            foreach ($fieldSchema as $def) {
+                $key = $def['key'] ?? null;
+                if ($key) {
+                    $this->integrationFields[$key] = $settings[$key] ?? '';
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to populate integration fields', [
+                'error' => $e->getMessage(),
+            ]);
+            $this->integrationFields = [];
+        }
+    }
+
+    /**
+     * Get integration field schema for a provider
+     */
+    protected function getIntegrationFieldSchema(int $providerId, string $providersConn): array
+    {
+        if (!$this->selectedTenantId) {
+            return [];
+        }
+
+        $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+        if (!$tenant || !$tenant->rdsInstance || !$tenant->rdsInstance->providers_database) {
+            return [];
+        }
+
+        try {
+            $provider = DB::connection($providersConn)
+                ->table('providers')
+                ->where('id', $providerId)
+                ->first();
+
+            if (!$provider) {
+                return [];
+            }
+
+            return is_array($provider->field_schema) 
+                ? $provider->field_schema 
+                : (json_decode($provider->field_schema, true) ?: []);
+        } catch (\Exception $e) {
+            \Log::error('Failed to get integration field schema', [
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Decrypt settings from database
+     */
+    protected function decryptSettings(?string $encryptedSettings): array
+    {
+        if (empty($encryptedSettings)) {
+            return [];
+        }
+
+        try {
+            $decrypted = Crypt::decryptString($encryptedSettings);
+            $decoded = json_decode($decrypted, true);
+            return is_array($decoded) ? $decoded : [];
+        } catch (\Exception $e) {
+            \Log::error('Failed to decrypt integration settings', [
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Encrypt settings for database
+     */
+    protected function encryptSettings(array $settings): string
+    {
+        return Crypt::encryptString(json_encode($settings));
+    }
+
+    /**
+     * Updated selected provider ID
+     */
+    public function updatedSelectedProviderId($value): void
+    {
+        $providerId = $value !== null && $value !== '' ? (int) $value : null;
+        $this->selectedProviderId = $providerId;
+        $this->refreshSelectedProviderMeta($providerId);
+
+        if ($providerId && $this->selectedTenantId) {
+            $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+            if ($tenant && $tenant->rdsInstance && $tenant->rdsInstance->providers_database) {
+                $rds = $tenant->rdsInstance;
+                $service = app(RdsConnectionService::class);
+                $providersConn = $service->getProvidersConnectionName($rds->id);
+                $this->populateIntegrationFieldsFromSettings($providerId, [], $providersConn);
+                $this->loadLocationMaps();
+            }
+        } else {
+            $this->integrationFields = [];
+            $this->providerSettingsText = '';
+            $this->locationMaps = [];
+        }
+    }
+
+    /**
+     * Reset provider settings form
+     */
+    public function resetProviderSettingsForm(): void
+    {
+        $this->providerSettingsText = '';
+        $this->providerActive = true;
+        $this->integrationFields = [];
+        $this->isEditingIntegration = false;
+        $this->selectedLocationId = null;
+        $this->tenantLocations = [];
+        $this->locationMaps = [];
+        $this->selectedProviderId = null;
+        $this->refreshSelectedProviderMeta(null);
+    }
+
+    /**
+     * Close provider settings modal
+     */
+    public function closeProviderSettingsModal(): void
+    {
+        $this->showProviderSettingsModal = false;
+        $this->resetProviderSettingsForm();
+    }
+
+    /**
+     * Save provider settings
+     */
+    public function saveProviderSettings(): void
+    {
+        if (!auth()->user()?->hasRainboPermission('tenant.manage')) {
+            abort(403, 'You do not have permission to manage integrations.');
+        }
+
+        $this->loadAvailableProviders();
+        $validProviderIds = array_map('intval', array_keys($this->availableProviders));
+
+        $this->validate([
+            'selectedProviderId' => ['required', 'integer', Rule::in($validProviderIds)],
+            'providerActive' => 'boolean',
+        ]);
+
+        $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+        if (!$tenant || !$tenant->rdsInstance || !$tenant->rdsInstance->providers_database) {
+            $this->dispatch('notify', type: 'error', message: 'Providers database not configured for this RDS.');
+            return;
+        }
+
+        $rds = $tenant->rdsInstance;
+        $service = app(RdsConnectionService::class);
+        $providersConn = $service->getProvidersConnectionName($rds->id);
+        $raiConn = $service->getConnection($rds);
+
+        $provider = DB::connection($providersConn)
+            ->table('providers')
+            ->where('id', $this->selectedProviderId)
+            ->first();
+
+        if (!$provider) {
+            $this->addError('selectedProviderId', 'Selected provider could not be found.');
+            return;
+        }
+
+        if ($provider->has_location) {
+            $this->validate([
+                'selectedLocationId' => [
+                    'required',
+                    'integer',
+                ],
+            ]);
+        }
+
+        // Validate field schema fields
+        $fields = $this->getIntegrationFieldSchema($this->selectedProviderId, $providersConn);
+        foreach ($fields as $fieldDef) {
+            $key = $fieldDef['key'] ?? null;
+            if (!$key) {
+                continue;
+            }
+            if (!isset($this->integrationFields[$key]) || trim((string) $this->integrationFields[$key]) === '') {
+                $label = $fieldDef['label'] ?? $key;
+                $this->addError("integrationFields.{$key}", "{$label} is required.");
+            }
+        }
+
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
+        // Build settings array
+        $settings = [];
+        if (!empty($fields)) {
+            foreach ($fields as $fieldDef) {
+                $key = $fieldDef['key'] ?? null;
+                if ($key) {
+                    $settings[$key] = $this->integrationFields[$key] ?? '';
+                }
+            }
+        } else {
+            // Fallback to JSON text if no field schema
+            if (trim($this->providerSettingsText) === '') {
+                $this->addError('providerSettingsText', 'Settings are required.');
+                return;
+            }
+            $decodedJson = json_decode($this->providerSettingsText, true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($decodedJson)) {
+                $this->addError('providerSettingsText', 'Settings JSON is invalid: ' . json_last_error_msg());
+                return;
+            }
+            $settings = $decodedJson;
+        }
+
+        // Find existing integration
+        if ($provider->has_location) {
+            $integration = DB::connection($providersConn)
+                ->table('integrations')
+                ->where('integrated_type', 'App\Models\Rai\Location')
+                ->where('integrated_id', $this->selectedLocationId)
+                ->where('provider_id', $this->selectedProviderId)
+                ->first();
+        } else {
+            $integration = DB::connection($providersConn)
+                ->table('integrations')
+                ->where('integrated_type', 'App\Models\Rai\Tenant')
+                ->where('integrated_id', $tenant->remote_tenant_id)
+                ->where('provider_id', $this->selectedProviderId)
+                ->first();
+        }
+
+        // Update or create integration
+        $encryptedSettings = $this->encryptSettings($settings);
+        
+        if ($integration) {
+            DB::connection($providersConn)
+                ->table('integrations')
+                ->where('id', $integration->id)
+                ->update([
+                    'settings' => $encryptedSettings,
+                    'is_active' => $this->providerActive,
+                    'updated_at' => now(),
+                ]);
+        } else {
+            DB::connection($providersConn)
+                ->table('integrations')
+                ->insert([
+                    'settings' => $encryptedSettings,
+                    'is_active' => $this->providerActive,
+                    'integrated_type' => $provider->has_location 
+                        ? 'App\Models\Rai\Location' 
+                        : 'App\Models\Rai\Tenant',
+                    'integrated_id' => $provider->has_location 
+                        ? $this->selectedLocationId 
+                        : $tenant->remote_tenant_id,
+                    'provider_id' => $this->selectedProviderId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+        }
+
+        // Log audit
+        AuditLog::log(
+            'integration_saved',
+            'TenantMaster',
+            $tenant->id,
+            null,
+            [
+                'provider_id' => $this->selectedProviderId,
+                'provider_name' => $provider->name,
+                'is_location_level' => (bool) $provider->has_location,
+                'location_id' => $this->selectedLocationId,
+            ]
+        );
+
+        $locationText = $provider->has_location && isset($this->tenantLocations[$this->selectedLocationId]) 
+            ? " for location '{$this->tenantLocations[$this->selectedLocationId]}'"
+            : '';
+
+        $this->dispatch('notify', type: 'success', message: "Integration settings for '{$provider->name}'{$locationText} saved successfully!");
+        $this->closeProviderSettingsModal();
+    }
+
+    /**
+     * Delete provider settings
+     */
+    public function deleteProviderSettings(int $providerId, ?int $locationId = null): void
+    {
+        if (!auth()->user()?->hasRainboPermission('tenant.manage')) {
+            abort(403, 'You do not have permission to delete integrations.');
+        }
+
+        $tenant = TenantMaster::with('rdsInstance')->find($this->selectedTenantId);
+        if (!$tenant || !$tenant->rdsInstance || !$tenant->rdsInstance->providers_database) {
+            $this->dispatch('notify', type: 'error', message: 'Providers database not configured for this RDS.');
+            return;
+        }
+
+        $rds = $tenant->rdsInstance;
+        $service = app(RdsConnectionService::class);
+        $providersConn = $service->getProvidersConnectionName($rds->id);
+
+        $provider = DB::connection($providersConn)
+            ->table('providers')
+            ->where('id', $providerId)
+            ->first();
+
+        if (!$provider) {
+            $this->dispatch('notify', type: 'error', message: 'Provider not found.');
+            return;
+        }
+
+        if ($provider->has_location && $locationId !== null) {
+            DB::connection($providersConn)
+                ->table('integrations')
+                ->where('provider_id', $providerId)
+                ->where('integrated_type', 'App\Models\Rai\Location')
+                ->where('integrated_id', $locationId)
+                ->delete();
+        } else {
+            DB::connection($providersConn)
+                ->table('integrations')
+                ->where('provider_id', $providerId)
+                ->where('integrated_type', 'App\Models\Rai\Tenant')
+                ->where('integrated_id', $tenant->remote_tenant_id)
+                ->delete();
+        }
+
+        // Log audit
+        AuditLog::log(
+            'integration_deleted',
+            'TenantMaster',
+            $tenant->id,
+            null,
+            [
+                'provider_id' => $providerId,
+                'provider_name' => $provider->name,
+                'is_location_level' => (bool) $provider->has_location,
+                'location_id' => $locationId,
+            ]
+        );
+
+        $this->loadAvailableProviders();
+        $this->dispatch('notify', type: 'success', message: "Integration settings for '{$provider->name}' deleted successfully!");
     }
 }
 

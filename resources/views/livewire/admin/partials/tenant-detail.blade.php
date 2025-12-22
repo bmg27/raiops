@@ -200,4 +200,260 @@
     </div>
 </div>
 
+{{-- INTEGRATIONS SECTION --}}
+@if($liveData && isset($liveData['success']))
+<div class="card mb-2">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <strong class="small"><i class="bi bi-plug me-1"></i>Integrations</strong>
+        <button type="button" class="btn btn-primary btn-sm" wire:click="openProviderSettingsModal">
+            <i class="bi bi-plus-lg me-1"></i> Add Integration
+        </button>
+    </div>
+    <div class="card-body py-2">
+        @php
+            $integrations = $this->getProviderSettings();
+            $tenantIntegrations = collect($integrations)->where('is_location_level', false);
+            $locationIntegrations = collect($integrations)->where('is_location_level', true)->groupBy('location_id');
+        @endphp
+
+        @if($tenantIntegrations->isEmpty() && $locationIntegrations->isEmpty())
+            <div class="text-center text-muted py-3">
+                <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                <small>No integrations configured</small>
+            </div>
+        @else
+            {{-- Tenant-level integrations --}}
+            @if($tenantIntegrations->isNotEmpty())
+                <div class="mb-3">
+                    <h6 class="small fw-bold mb-2">Tenant-Level Integrations</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="small">Provider</th>
+                                    <th class="small">Status</th>
+                                    <th class="small">Last Updated</th>
+                                    <th class="small text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($tenantIntegrations as $integration)
+                                    <tr>
+                                        <td class="small">{{ $integration['provider_name'] }}</td>
+                                        <td>
+                                            <span class="badge {{ $integration['is_active'] ? 'bg-success' : 'bg-secondary' }} small">
+                                                {{ $integration['is_active'] ? 'Active' : 'Disabled' }}
+                                            </span>
+                                        </td>
+                                        <td class="small text-muted">
+                                            {{ $integration['updated_at'] ? \Carbon\Carbon::parse($integration['updated_at'])->diffForHumans() : 'N/A' }}
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                    wire:click="openProviderSettingsModal({{ $integration['provider_id'] }})" 
+                                                    title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                    wire:click="deleteProviderSettings({{ $integration['provider_id'] }})" 
+                                                    wire:confirm="Delete this integration?"
+                                                    title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Location-level integrations --}}
+            @if($locationIntegrations->isNotEmpty())
+                <div>
+                    <h6 class="small fw-bold mb-2">Location-Level Integrations</h6>
+                    @foreach($locationIntegrations as $locationId => $integrations)
+                        <div class="mb-3">
+                            <strong class="small text-muted">{{ $integrations->first()['location_name'] ?? "Location {$locationId}" }}</strong>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="small">Provider</th>
+                                            <th class="small">Status</th>
+                                            <th class="small">Last Updated</th>
+                                            <th class="small text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($integrations as $integration)
+                                            <tr>
+                                                <td class="small">{{ $integration['provider_name'] }}</td>
+                                                <td>
+                                                    <span class="badge {{ $integration['is_active'] ? 'bg-success' : 'bg-secondary' }} small">
+                                                        {{ $integration['is_active'] ? 'Active' : 'Disabled' }}
+                                                    </span>
+                                                </td>
+                                                <td class="small text-muted">
+                                                    {{ $integration['updated_at'] ? \Carbon\Carbon::parse($integration['updated_at'])->diffForHumans() : 'N/A' }}
+                                                </td>
+                                                <td class="text-end">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                            wire:click="openProviderSettingsModal({{ $integration['provider_id'] }}, {{ $integration['location_id'] }})" 
+                                                            title="Edit">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                            wire:click="deleteProviderSettings({{ $integration['provider_id'] }}, {{ $integration['location_id'] }})" 
+                                                            wire:confirm="Delete this integration?"
+                                                            title="Delete">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        @endif
+    </div>
+</div>
+@endif
+
+{{-- PROVIDER SETTINGS MODAL --}}
+@if($showProviderSettingsModal)
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" wire:click.self="closeProviderSettingsModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plug me-2"></i>
+                    {{ $isEditingIntegration ? 'Edit' : 'Add' }} Integration
+                </h5>
+                <button type="button" class="btn-close" wire:click="closeProviderSettingsModal"></button>
+            </div>
+            <div class="modal-body">
+                <form wire:submit.prevent="saveProviderSettings">
+                    {{-- Provider Selection --}}
+                    <div class="mb-3">
+                        <label class="form-label">Provider <span class="text-danger">*</span></label>
+                        <select class="form-select @error('selectedProviderId') is-invalid @enderror" 
+                            wire:model.live="selectedProviderId"
+                            @if($isEditingIntegration) disabled @endif>
+                            <option value="">Select a provider...</option>
+                            @foreach($availableProviders as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                            @endforeach
+                        </select>
+                        @error('selectedProviderId')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        @if($isEditingIntegration)
+                            <small class="form-text text-muted">Provider cannot be changed after creation. Delete and recreate to change.</small>
+                        @endif
+                    </div>
+
+                    {{-- Location Selection (for location-level integrations) --}}
+                    @if($selectedProviderHasLocation)
+                        <div class="mb-3">
+                            <label class="form-label">Location <span class="text-danger">*</span></label>
+                            <select class="form-select @error('selectedLocationId') is-invalid @enderror" 
+                                wire:model="selectedLocationId"
+                                @if($isEditingIntegration && $selectedLocationId) disabled @endif>
+                                <option value="">Select a location...</option>
+                                @foreach($tenantLocations as $locationId => $locationName)
+                                    <option value="{{ $locationId }}">{{ $locationName }}</option>
+                                @endforeach
+                            </select>
+                            @error('selectedLocationId')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            @if($isEditingIntegration && $selectedLocationId)
+                                <small class="form-text text-muted">Location cannot be changed after creation.</small>
+                            @endif
+                        </div>
+                    @endif
+
+                    {{-- Dynamic Fields from Field Schema --}}
+                    @if(!empty($selectedProviderFieldSchema))
+                        @foreach($selectedProviderFieldSchema as $fieldDef)
+                            @php
+                                $key = $fieldDef['key'] ?? null;
+                                $label = $fieldDef['label'] ?? $key;
+                                $type = $fieldDef['type'] ?? 'text';
+                                $required = $fieldDef['required'] ?? false;
+                            @endphp
+                            @if($key)
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {{ $label }}
+                                        @if($required) <span class="text-danger">*</span> @endif
+                                    </label>
+                                    @if($type === 'textarea')
+                                        <textarea class="form-control @error('integrationFields.' . $key) is-invalid @enderror"
+                                            wire:model="integrationFields.{{ $key }}"
+                                            rows="3"></textarea>
+                                    @else
+                                        <input type="{{ $type }}" 
+                                            class="form-control @error('integrationFields.' . $key) is-invalid @enderror"
+                                            wire:model="integrationFields.{{ $key }}"
+                                            @if($type === 'password') autocomplete="new-password" @endif>
+                                    @endif
+                                    @error('integrationFields.' . $key)
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endif
+                        @endforeach
+                    @else
+                        {{-- Fallback JSON editor if no field schema --}}
+                        <div class="mb-3">
+                            <label class="form-label">Settings (JSON) <span class="text-danger">*</span></label>
+                            <textarea class="form-control @error('providerSettingsText') is-invalid @enderror" 
+                                wire:model="providerSettingsText"
+                                rows="8"
+                                placeholder='{"key": "value"}'></textarea>
+                            @error('providerSettingsText')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">Enter settings as JSON</small>
+                        </div>
+                    @endif
+
+                    {{-- Active Status --}}
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" 
+                                wire:model="providerActive" 
+                                id="providerActive">
+                            <label class="form-check-label" for="providerActive">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" wire:click="closeProviderSettingsModal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <span wire:loading.remove wire:target="saveProviderSettings">Save</span>
+                            <span wire:loading wire:target="saveProviderSettings">
+                                <span class="spinner-border spinner-border-sm"></span>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
