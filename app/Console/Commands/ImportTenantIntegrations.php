@@ -40,6 +40,19 @@ class ImportTenantIntegrations extends Command
         if (isset($exportData['exported_at'])) {
             $this->info("Exported at: {$exportData['exported_at']}");
         }
+        
+        // Show tenant mapping info
+        if ($targetTenantId) {
+            $this->info("Target tenant override: {$targetTenantId} (will override tenant_master_id from export)");
+        } else {
+            $tenantIds = array_unique(array_column($exportData['integrations'], 'tenant_master_id'));
+            if (count($tenantIds) === 1) {
+                $this->info("Using tenant_master_id from export: {$tenantIds[0]}");
+            } else {
+                $this->info("Export contains multiple tenants: " . implode(', ', $tenantIds));
+                $this->info("Each integration will use its exported tenant_master_id");
+            }
+        }
         $this->line('');
 
         if ($dryRun) {
@@ -54,9 +67,23 @@ class ImportTenantIntegrations extends Command
             $errors = 0;
 
             foreach ($exportData['integrations'] as $integrationData) {
+                $exportedTenantId = null;
                 try {
                     // Determine target tenant
-                    $tenantMasterId = $targetTenantId ? (int) $targetTenantId : $integrationData['tenant_master_id'];
+                    $exportedTenantId = $integrationData['tenant_master_id'] ?? null;
+                    $tenantMasterId = $targetTenantId ? (int) $targetTenantId : $exportedTenantId;
+                    
+                    if (!$tenantMasterId) {
+                        $this->warn("Skipping integration - no tenant_master_id in export data");
+                        $skipped++;
+                        continue;
+                    }
+                    
+                    // Log which tenant we're using
+                    if ($targetTenantId && $exportedTenantId && $targetTenantId != $exportedTenantId) {
+                        $this->line("Using target tenant {$tenantMasterId} (export had tenant_master_id: {$exportedTenantId})");
+                    }
+                    
                     $tenant = TenantMaster::with('rdsInstance')->find($tenantMasterId);
 
                     if (!$tenant) {
@@ -133,7 +160,10 @@ class ImportTenantIntegrations extends Command
                         $this->line("Would " . ($existing ? "update" : "create") . " integration:");
                         $this->line("  Provider: {$integrationData['provider_name']} (ID: {$integrationData['provider_id']})");
                         $this->line("  Level: {$integrationData['level']}");
-                        $this->line("  Tenant: {$tenant->name} (ID: {$tenantMasterId})");
+                        $this->line("  Importing to Tenant: {$tenant->name} (tenant_master_id: {$tenantMasterId})");
+                        if ($exportedTenantId && $exportedTenantId != $tenantMasterId) {
+                            $this->line("  ⚠️  Note: Export had tenant_master_id: {$exportedTenantId}, but using {$tenantMasterId}");
+                        }
                         if ($integrationData['level'] === 'location') {
                             $this->line("  Location: {$integrationData['location_name']} (ID: {$integratedId})");
                         }
@@ -167,7 +197,11 @@ class ImportTenantIntegrations extends Command
                             ->where('id', $existing->id)
                             ->update($integrationData_db);
                         
-                        $this->info("Updated integration: {$integrationData['provider_name']} for tenant {$tenant->name}");
+                        $tenantInfo = "tenant {$tenant->name} (ID: {$tenantMasterId})";
+                        if ($exportedTenantId && $exportedTenantId != $tenantMasterId) {
+                            $tenantInfo .= " [export had ID: {$exportedTenantId}]";
+                        }
+                        $this->info("Updated integration: {$integrationData['provider_name']} for {$tenantInfo}");
                     } else {
                         // Create new
                         $integrationData_db['created_at'] = $integrationData['created_at'] ?? now();
@@ -175,7 +209,11 @@ class ImportTenantIntegrations extends Command
                             ->table('integrations')
                             ->insert($integrationData_db);
                         
-                        $this->info("Created integration: {$integrationData['provider_name']} for tenant {$tenant->name}");
+                        $tenantInfo = "tenant {$tenant->name} (ID: {$tenantMasterId})";
+                        if ($exportedTenantId && $exportedTenantId != $tenantMasterId) {
+                            $tenantInfo .= " [export had ID: {$exportedTenantId}]";
+                        }
+                        $this->info("Created integration: {$integrationData['provider_name']} for {$tenantInfo}");
                     }
 
                     $imported++;
