@@ -14,7 +14,8 @@ class ImportTenantIntegrations extends Command
 
     protected $signature = 'raiops:import-integrations 
                             {file : Path to JSON export file}
-                            {--tenant-id= : Map to specific tenant_master ID (optional, uses tenant_master_id from export)}
+                            {--tenant-id= : Map to specific tenant_master ID (optional)}
+                            {--tenant-name= : Map by tenant name from export (optional, more reliable across installs)}
                             {--dry-run : Show what would be imported without actually importing}';
 
     protected $description = 'Import integrations from JSON export file into destination RAI database';
@@ -24,6 +25,7 @@ class ImportTenantIntegrations extends Command
         $file = $this->argument('file');
         $dryRun = $this->option('dry-run');
         $targetTenantId = $this->option('tenant-id');
+        $targetTenantName = $this->option('tenant-name');
 
         if (!file_exists($file)) {
             $this->error("File not found: {$file}");
@@ -43,14 +45,18 @@ class ImportTenantIntegrations extends Command
         
         // Show tenant mapping info
         if ($targetTenantId) {
-            $this->info("Target tenant override: {$targetTenantId} (will override tenant_master_id from export)");
+            $this->info("Target tenant override: tenant_master_id {$targetTenantId} (will override export)");
+        } elseif ($targetTenantName) {
+            $this->info("Target tenant override: name '{$targetTenantName}' (will match by name)");
         } else {
+            $tenantNames = array_unique(array_column($exportData['integrations'], 'tenant_name'));
             $tenantIds = array_unique(array_column($exportData['integrations'], 'tenant_master_id'));
-            if (count($tenantIds) === 1) {
-                $this->info("Using tenant_master_id from export: {$tenantIds[0]}");
+            if (count($tenantNames) === 1) {
+                $this->info("Export contains tenant: '{$tenantNames[0]}'");
+                $this->info("Will attempt to match by tenant name (tenant_master_id not portable across installs)");
             } else {
-                $this->info("Export contains multiple tenants: " . implode(', ', $tenantIds));
-                $this->info("Each integration will use its exported tenant_master_id");
+                $this->info("Export contains multiple tenants: " . implode(', ', $tenantNames));
+                $this->info("Each integration will be matched by tenant name");
             }
         }
         $this->line('');
@@ -68,26 +74,52 @@ class ImportTenantIntegrations extends Command
 
             foreach ($exportData['integrations'] as $integrationData) {
                 $exportedTenantId = null;
+                $exportedTenantName = null;
                 try {
                     // Determine target tenant
                     $exportedTenantId = $integrationData['tenant_master_id'] ?? null;
-                    $tenantMasterId = $targetTenantId ? (int) $targetTenantId : $exportedTenantId;
+                    $exportedTenantName = $integrationData['tenant_name'] ?? null;
                     
-                    if (!$tenantMasterId) {
-                        $this->warn("Skipping integration - no tenant_master_id in export data");
-                        $skipped++;
-                        continue;
+                    $tenant = null;
+                    
+                    if ($targetTenantId) {
+                        // Use explicit tenant_master_id override
+                        $tenant = TenantMaster::with('rdsInstance')->find((int) $targetTenantId);
+                        $tenantMasterId = $targetTenantId;
+                    } elseif ($targetTenantName) {
+                        // Use explicit tenant name override
+                        $tenant = TenantMaster::with('rdsInstance')->where('name', $targetTenantName)->first();
+                        if (!$tenant) {
+                            $this->warn("Skipping integration - tenant name '{$targetTenantName}' not found");
+                            $skipped++;
+                            continue;
+                        }
+                        $tenantMasterId = $tenant->id;
+                    } elseif ($exportedTenantName) {
+                        // Match by tenant name from export (most reliable across installs)
+                        $tenant = TenantMaster::with('rdsInstance')->where('name', $exportedTenantName)->first();
+                        if (!$tenant) {
+                            $this->warn("Skipping integration - tenant name '{$exportedTenantName}' not found (exported tenant_master_id was {$exportedTenantId})");
+                            $skipped++;
+                            continue;
+                        }
+                        $tenantMasterId = $tenant->id;
+                        if ($exportedTenantId && $tenantMasterId != $exportedTenantId) {
+                            $this->line("Matched by name: '{$exportedTenantName}' -> tenant_master_id {$tenantMasterId} (export had ID: {$exportedTenantId})");
+                        }
+                    } else {
+                        // Fallback to tenant_master_id (may not work across installs)
+                        if (!$exportedTenantId) {
+                            $this->warn("Skipping integration - no tenant_master_id or tenant_name in export data");
+                            $skipped++;
+                            continue;
+                        }
+                        $tenant = TenantMaster::with('rdsInstance')->find($exportedTenantId);
+                        $tenantMasterId = $exportedTenantId;
                     }
                     
-                    // Log which tenant we're using
-                    if ($targetTenantId && $exportedTenantId && $targetTenantId != $exportedTenantId) {
-                        $this->line("Using target tenant {$tenantMasterId} (export had tenant_master_id: {$exportedTenantId})");
-                    }
-                    
-                    $tenant = TenantMaster::with('rdsInstance')->find($tenantMasterId);
-
                     if (!$tenant) {
-                        $this->warn("Skipping integration - tenant_master ID {$tenantMasterId} not found");
+                        $this->warn("Skipping integration - tenant not found (tried ID: {$tenantMasterId})");
                         $skipped++;
                         continue;
                     }
