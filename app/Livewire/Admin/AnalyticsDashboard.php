@@ -12,7 +12,7 @@ use Livewire\Component;
 /**
  * AnalyticsDashboard Component
  * 
- * RAINBO Command Central's analytics and reporting dashboard.
+ * RAIOPS Command Central's analytics and reporting dashboard.
  * Shows MRR, tenant growth, billing overview, and key metrics.
  */
 class AnalyticsDashboard extends Component
@@ -157,7 +157,7 @@ class AnalyticsDashboard extends Component
      */
     public function exportAnalytics(): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        $filename = 'rainbo-analytics-' . now()->format('Y-m-d') . '.csv';
+        $filename = 'raiops-analytics-' . now()->format('Y-m-d') . '.csv';
 
         return response()->streamDownload(function () {
             $handle = fopen('php://output', 'w');

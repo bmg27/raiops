@@ -10,7 +10,7 @@ use Livewire\WithPagination;
 /**
  * AuditLogViewer Component
  * 
- * RAINBO Command Central's audit log viewer.
+ * RAIOPS Command Central's audit log viewer.
  * Shows all admin actions with filtering, search, and detail views.
  */
 class AuditLogViewer extends Component
@@ -233,7 +233,7 @@ class AuditLogViewer extends Component
                 $q->where('action', $this->actionFilter);
             })
             ->when($this->userFilter !== 'all', function ($q) {
-                $q->where('rainbo_user_id', $this->userFilter);
+                $q->where('raiops_user_id', $this->userFilter);
             })
             ->when($this->modelFilter !== 'all', function ($q) {
                 $q->where('model_type', $this->modelFilter);

@@ -20,17 +20,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // RAINBO Permission Blade Directives
+        // RAIOPS Permission Blade Directives
         
         /**
-         * @can_rainbo('permission.name') - Check if user has RAINBO permission
+         * @canRaiOps('permission.name') - Check if user has RAIOPS permission
          */
-        Blade::if('canRainbo', function (string $permission) {
+        Blade::if('canRaiOps', function (string $permission) {
             $user = auth()->user();
             if (!$user) {
                 return false;
             }
-            return $user->hasRainboPermission($permission);
+            return $user->hasRaiOpsPermission($permission);
         });
 
         /**

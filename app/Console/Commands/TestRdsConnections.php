@@ -13,7 +13,7 @@ class TestRdsConnections extends Command
      *
      * @var string
      */
-    protected $signature = 'rainbo:test-connections
+    protected $signature = 'raiops:test-connections
                             {--rds= : Test a specific RDS instance by ID}
                             {--all : Test all RDS instances (default)}
                             {--update-health : Update health status in database}';

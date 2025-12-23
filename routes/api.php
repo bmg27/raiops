@@ -14,7 +14,7 @@ Route::get('/user', function (Request $request) {
 |--------------------------------------------------------------------------
 |
 | These endpoints receive events from RAI instances for centralized
-| logging and monitoring in RAINBO.
+| logging and monitoring in RAIOPS.
 |
 */
 

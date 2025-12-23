@@ -127,7 +127,7 @@
 
     <!-- top left menu button on mobile -->
     <span class="menu-button bi-list d-print-none d-lg-none cursor-pointer fs-4 ms-4" id="menu-button-header">
-        <span class="rai-brand-text fw-bold" id="rai-brand-text" style="letter-spacing:-0.125rem">RAINBO</span>
+        <span class="rai-brand-text fw-bold" id="rai-brand-text" style="letter-spacing:-0.125rem">RAIOPS</span>
     </span>
 </div>
 

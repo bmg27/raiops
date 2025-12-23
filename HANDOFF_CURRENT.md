@@ -1,4 +1,4 @@
-# RAINBO Multi-RDS Command Central - Handoff Document
+# RAIOPS Multi-RDS Command Central - Handoff Document
 
 **Date:** December 20, 2025  
 **Branch:** `master`  
@@ -8,7 +8,7 @@
 
 ## 🎯 Project Overview
 
-**RAINBO** (RAI Back Office) is the administrative command central for managing the multi-tenant, multi-RDS RAI restaurant management system. It provides system administrators with tools to:
+**RAIOPS** (RAI Back Office) is the administrative command central for managing the multi-tenant, multi-RDS RAI restaurant management system. It provides system administrators with tools to:
 
 - Manage RDS instances across the infrastructure
 - Monitor tenant health and status across all RDS
@@ -24,8 +24,8 @@
 - **MySQL** database
 
 ### Project Locations
-- **Linux:** `/var/www/html/rainbo`
-- **Windows (WSL):** `z:\var\www\html\rainbo`
+- **Linux:** `/var/www/html/raiops`
+- **Windows (WSL):** `z:\var\www\html\raiops`
 
 ---
 
@@ -34,16 +34,16 @@
 ### Database Schema
 
 ```
-rainbo (database)
+raiops (database)
 ├── rds_instances           ✅ RDS configurations with encrypted passwords
 ├── tenant_master           ✅ Central tenant registry across all RDS
 ├── audit_logs              ✅ Admin action tracking
-├── rainbo_permissions      ✅ Permission definitions
-├── rainbo_role_permissions ✅ Role-permission mappings
+├── raiops_permissions      ✅ Permission definitions
+├── raiops_role_permissions ✅ Role-permission mappings
 ├── subscription_plans      ✅ Plan tiers (Starter, Professional, Enterprise)
 ├── tenant_billing          ✅ Billing info per tenant
 ├── user_email_routing_cache ✅ Synced routing data
-└── users                   ✅ RAINBO admin users (with role column)
+└── users                   ✅ RAIOPS admin users (with role column)
 ```
 
 ### Models Created
@@ -56,7 +56,7 @@ rainbo (database)
 | `TenantBilling` | `app/Models/TenantBilling.php` | Billing information |
 | `SubscriptionPlan` | `app/Models/SubscriptionPlan.php` | Plan definitions |
 | `UserEmailRoutingCache` | `app/Models/UserEmailRoutingCache.php` | Cached routing data |
-| `RainboPermission` | `app/Models/RainboPermission.php` | Permission helper methods |
+| `RaiOpsPermission` | `app/Models/RaiOpsPermission.php` | Permission helper methods |
 
 ### Services
 
@@ -74,7 +74,7 @@ rainbo (database)
 
 | Seeder | Purpose |
 |--------|---------|
-| `SystemAdminSeeder` | Creates `admin@rainbo.local` system admin |
+| `SystemAdminSeeder` | Creates `admin@raiops.local` system admin |
 | `RdsInstanceSeeder` | Configures Master RDS from `RAI_DB_*` env vars |
 | `TenantMasterSyncSeeder` | Syncs tenants from all RDS to `tenant_master` |
 
@@ -83,7 +83,7 @@ rainbo (database)
 ## 🔐 Authentication & Authorization
 
 ### Login Credentials (Development)
-- **Email:** `admin@rainbo.local`
+- **Email:** `admin@raiops.local`
 - **Password:** `password`
 - **Role:** `system_admin`
 
@@ -100,8 +100,8 @@ rainbo (database)
 
 ```php
 // In User model
-$user->hasRainboPermission('tenant.view')  // Check specific permission
-$user->getRainboPermissions()              // Get all permissions for role
+$user->hasRaiOpsPermission('tenant.view')  // Check specific permission
+$user->getRaiOpsPermissions()              // Get all permissions for role
 $user->isSystemAdmin()                     // Check if system admin
 ```
 
@@ -184,7 +184,7 @@ RDS passwords are encrypted using Laravel's `Crypt` facade:
 ### Start the Server
 
 ```bash
-cd /var/www/html/rainbo
+cd /var/www/html/raiops
 php artisan serve --port=8001
 ```
 
@@ -233,21 +233,21 @@ php artisan route:clear
 - [x] Tenant Management page with RDS indicator (`TenantMultiRds` component)
 - [x] Tenant detail view with live data from correct RDS
 - [x] User routing management (`UserRoutingManagement` component)
-- [x] Sync commands (`rainbo:sync-tenant-summaries`, `rainbo:sync-user-routing`, `rainbo:sync-all`)
-- [x] Simplified sidebar menu for RAINBO admin
+- [x] Sync commands (`raiops:sync-tenant-summaries`, `raiops:sync-user-routing`, `raiops:sync-all`)
+- [x] Simplified sidebar menu for RAIOPS admin
 
 ### ✅ Phase 3: Impersonation Flow (COMPLETE)
-- [x] `ImpersonationTokenService` - JWT token generation in RAINBO
+- [x] `ImpersonationTokenService` - JWT token generation in RAIOPS
 - [x] "Manage in RAI" button on tenant detail page
 - [x] Audit logging for impersonation events
 - [x] RAI-side setup documentation (`docs/RAI_IMPERSONATION_SETUP.md`)
-- [x] RAINBO config for impersonation secrets (`config/rainbo.php`)
+- [x] RAIOPS config for impersonation secrets (`config/raiops.php`)
 - [ ] *RAI-side implementation required* - See docs for setup steps
 
 ### ✅ Phase 4: Audit & Polish (COMPLETE)
 - [x] Audit log viewer UI with filters, stats, and detail modal
 - [x] RAI webhook endpoint for audit event push (`/api/webhooks/rai/audit`)
-- [x] Permission enforcement in UI with `@canRainbo` Blade directive
+- [x] Permission enforcement in UI with `@canRaiOps` Blade directive
 - [x] Ghost user cleanup documented in `docs/RAI_IMPERSONATION_SETUP.md`
 
 ### ✅ Phase 5: Reports & Billing (COMPLETE)
@@ -263,8 +263,8 @@ php artisan route:clear
 
 | Document | Location | Purpose |
 |----------|----------|---------|
-| Full Architecture Spec | `docs/RAINBO_MULTI_RDS_SPEC.md` | Detailed spec with all schemas, flows, code examples |
-| Original RAINBO Handoff | `HANDOFF.md` | Pre-multi-RDS documentation |
+| Full Architecture Spec | `docs/RAIOPS_MULTI_RDS_SPEC.md` | Detailed spec with all schemas, flows, code examples |
+| Original RAIOPS Handoff | `HANDOFF.md` | Pre-multi-RDS documentation |
 | RAI Multi-RDS Handoff | `/var/www/html/rai/HANDOFF_MULTI_RDS.md` | RAI-side multi-RDS status |
 
 ---
@@ -272,13 +272,13 @@ php artisan route:clear
 ## ⚠️ Important Notes
 
 ### Database Passwords
-- RAINBO uses **Laravel Crypt** for RDS passwords
+- RAIOPS uses **Laravel Crypt** for RDS passwords
 - Never manually insert encrypted passwords
 - Always set via Eloquent: `$rds->password = 'plain-text'`
 
 ### Separate Auth System
-- RAINBO has its **own users table** - not RAI users
-- Login to RAINBO with `admin@rainbo.local`, not RAI credentials
+- RAIOPS has its **own users table** - not RAI users
+- Login to RAIOPS with `admin@raiops.local`, not RAI credentials
 - Future: Impersonation will use JWT tokens to RAI
 
 ### RDS Health Checks
@@ -376,14 +376,14 @@ App\Models\RdsInstance::create([
 **RAI-side Setup Required:**
 - See `docs/RAI_IMPERSONATION_SETUP.md` for impersonation setup
 - For audit webhook, RAI should POST to `/api/webhooks/rai/audit`
-- Set `RAINBO_WEBHOOK_SECRET` in both apps for signature validation
+- Set `RAIOPS_WEBHOOK_SECRET` in both apps for signature validation
 
 **Key architectural decisions made:**
-- RAINBO has separate auth (own users table)
-- RAINBO DB is source of truth for platform data
+- RAIOPS has separate auth (own users table)
+- RAIOPS DB is source of truth for platform data
 - Hybrid data strategy (cached summaries + live queries)
 - JWT-based impersonation with 5-minute token expiry
-- Audit logging from both RAINBO and RAI (via webhook push)
+- Audit logging from both RAIOPS and RAI (via webhook push)
 - Permission-based UI hiding with Blade directives
 
 ---

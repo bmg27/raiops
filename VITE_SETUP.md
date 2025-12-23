@@ -1,4 +1,4 @@
-# Vite Setup Guide - RAINBO
+# Vite Setup Guide - RAIOPS
 
 ## Current Status
 
@@ -87,7 +87,7 @@ Once Node.js and npm are installed:
 ### 1. Install Dependencies
 
 ```bash
-cd /var/www/html/rainbo
+cd /var/www/html/raiops
 npm install
 ```
 
@@ -138,7 +138,7 @@ npm run watch
 
 ```bash
 # Check if manifest exists
-ls -la /var/www/html/rainbo/public/build/manifest.json
+ls -la /var/www/html/raiops/public/build/manifest.json
 
 # If it exists, Vite assets are built and will be used
 # If it doesn't exist, static assets will be used

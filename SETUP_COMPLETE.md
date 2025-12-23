@@ -1,9 +1,9 @@
-# RAI Back Office (RAINBO) - Setup Complete Summary
+# RAI Back Office (RAIOPS) - Setup Complete Summary
 
 ## ✅ Completed Setup
 
 ### 1. Project Foundation
-- ✅ Laravel 11.47.0 project created in `/var/www/html/rainbo`
+- ✅ Laravel 11.47.0 project created in `/var/www/html/raiops`
 - ✅ Jetstream installed with Livewire stack
 - ✅ Spatie Laravel Permission installed and configured
 - ✅ Custom Permission and Role models created (extending Spatie)
@@ -91,7 +91,7 @@
 ### Immediate:
 1. **Run npm install** (when npm is available):
    ```bash
-   cd /var/www/html/rainbo
+   cd /var/www/html/raiops
    npm install
    npm run dev
    ```

@@ -1,4 +1,4 @@
-# 🎉 RAINBO Setup Complete!
+# 🎉 RAIOPS Setup Complete!
 
 All three tasks have been completed successfully! Here's what was done:
 
@@ -21,7 +21,7 @@ The seeder can now connect to the RAI database to copy super admin users.
 - `database/seeders/CopySuperAdminUsersSeeder.php`
   - Connects to RAI database
   - Finds all users with `is_super_admin = true` and `status = 'Active'`
-  - Copies them to RAINBO database
+  - Copies them to RAIOPS database
   - Assigns `Super Admin` role automatically
   - Skips users that already exist (by email)
 
@@ -93,7 +93,7 @@ Tenants
 1. **Configure `.env`** with database credentials:
    ```env
    DB_CONNECTION=mysql
-   DB_DATABASE=rainbo
+   DB_DATABASE=raiops
    DB_USERNAME=your_username
    DB_PASSWORD=your_password
    

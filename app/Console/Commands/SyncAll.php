@@ -11,7 +11,7 @@ class SyncAll extends Command
      *
      * @var string
      */
-    protected $signature = 'rainbo:sync-all
+    protected $signature = 'raiops:sync-all
                             {--force : Force sync even if cache is fresh}';
 
     /**
@@ -19,7 +19,7 @@ class SyncAll extends Command
      *
      * @var string
      */
-    protected $description = 'Run all RAINBO sync commands (tenants + user routing)';
+    protected $description = 'Run all RAIOPS sync commands (tenants + user routing)';
 
     /**
      * Execute the console command.
@@ -28,7 +28,7 @@ class SyncAll extends Command
     {
         $this->info('');
         $this->info('╔═══════════════════════════════════════════════════╗');
-        $this->info('║     RAINBO Multi-RDS Sync - All Systems Go! 🚀    ║');
+        $this->info('║     RAIOPS Multi-RDS Sync - All Systems Go! 🚀    ║');
         $this->info('╚═══════════════════════════════════════════════════╝');
         $this->newLine();
 
@@ -37,13 +37,13 @@ class SyncAll extends Command
         // Sync tenant summaries
         $this->info('📋 Step 1/2: Syncing tenant summaries...');
         $this->newLine();
-        $tenantResult = $this->call('rainbo:sync-tenant-summaries', $options);
+        $tenantResult = $this->call('raiops:sync-tenant-summaries', $options);
         $this->newLine();
 
         // Sync user routing
         $this->info('📧 Step 2/2: Syncing user routing...');
         $this->newLine();
-        $routingResult = $this->call('rainbo:sync-user-routing');
+        $routingResult = $this->call('raiops:sync-user-routing');
         $this->newLine();
 
         // Summary

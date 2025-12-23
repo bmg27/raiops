@@ -8,7 +8,7 @@
             <p class="text-muted mb-0">Platform metrics, MRR tracking, and tenant insights</p>
         </div>
         <div>
-            @canRainbo('reports.export')
+            @canRaiOps('reports.export')
                 <a 
                     href="{{ route('admin.analytics.export') }}" 
                     class="btn btn-outline-primary btn-sm"
@@ -16,7 +16,7 @@
                 >
                     <i class="bi bi-download me-1"></i> Export CSV
                 </a>
-            @endcanRainbo
+            @endcanRaiOps
         </div>
     </div>
 

@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Schema;
 class CopyTenantDataSeeder extends Seeder
 {
     /**
-     * Copy tenant data from RAI database to RAINBO database
+     * Copy tenant data from RAI database to RAIOPS database
      */
     public function run(): void
     {
-        $this->command->info('🔄 Starting tenant data copy from RAI to RAINBO...');
+        $this->command->info('🔄 Starting tenant data copy from RAI to RAIOPS...');
 
         // Ensure RAI connection is configured
         $raiDbHost = env('RAI_DB_HOST');
@@ -68,7 +68,7 @@ class CopyTenantDataSeeder extends Seeder
     }
 
     /**
-     * Copy all tenants from RAI to RAINBO
+     * Copy all tenants from RAI to RAIOPS
      */
     private function copyTenants(): void
     {
@@ -127,7 +127,7 @@ class CopyTenantDataSeeder extends Seeder
     }
 
     /**
-     * Copy tenant subscriptions from RAI to RAINBO
+     * Copy tenant subscriptions from RAI to RAIOPS
      */
     private function copyTenantSubscriptions(): void
     {
@@ -192,7 +192,7 @@ class CopyTenantDataSeeder extends Seeder
     }
 
     /**
-     * Copy tenant invitations from RAI to RAINBO
+     * Copy tenant invitations from RAI to RAIOPS
      */
     private function copyTenantInvitations(): void
     {
@@ -287,9 +287,9 @@ class CopyTenantDataSeeder extends Seeder
                 return;
             }
 
-            // Check if seven_locations table exists in RAINBO
+            // Check if seven_locations table exists in RAIOPS
             if (!Schema::hasTable('seven_locations')) {
-                $this->command->warn('   seven_locations table does not exist in RAINBO database');
+                $this->command->warn('   seven_locations table does not exist in RAIOPS database');
                 $this->command->warn('   Creating table structure...');
                 
                 // Create the table with basic structure

@@ -5,7 +5,7 @@
             <h4 class="mb-1">
                 <i class="bi bi-heart-pulse me-2"></i>System Health Dashboard
             </h4>
-            <p class="text-muted mb-0">RAINBO Command Central Status Monitor</p>
+            <p class="text-muted mb-0">RAIOPS Command Central Status Monitor</p>
         </div>
         <div class="d-flex align-items-center gap-3">
             <small class="text-muted">

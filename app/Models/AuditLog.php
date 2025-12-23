@@ -15,7 +15,7 @@ class AuditLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'rainbo_user_id',
+        'raiops_user_id',
         'action',
         'model_type',
         'model_id',
@@ -52,7 +52,7 @@ class AuditLog extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'rainbo_user_id');
+        return $this->belongsTo(User::class, 'raiops_user_id');
     }
 
     /**
@@ -143,10 +143,10 @@ class AuditLog extends Model
         ?array $newValues = null,
         ?int $rdsInstanceId = null,
         ?int $tenantMasterId = null,
-        string $source = 'rainbo'
+        string $source = 'raiops'
     ): self {
         return static::create([
-            'rainbo_user_id' => auth()->id(),
+            'raiops_user_id' => auth()->id(),
             'action' => $action,
             'model_type' => $modelType,
             'model_id' => $modelId,
@@ -165,7 +165,7 @@ class AuditLog extends Model
      */
     public function scopeByUser($query, int $userId)
     {
-        return $query->where('rainbo_user_id', $userId);
+        return $query->where('raiops_user_id', $userId);
     }
 
     /**

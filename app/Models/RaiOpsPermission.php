@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class RainboPermission extends Model
+class RaiOpsPermission extends Model
 {
-    protected $table = 'rainbo_permissions';
+    protected $table = 'raiops_permissions';
 
     protected $fillable = [
         'name',
@@ -20,10 +20,10 @@ class RainboPermission extends Model
      */
     public static function forRole(string $role): array
     {
-        return \DB::table('rainbo_role_permissions')
-            ->join('rainbo_permissions', 'rainbo_permissions.id', '=', 'rainbo_role_permissions.permission_id')
-            ->where('rainbo_role_permissions.role', $role)
-            ->pluck('rainbo_permissions.name')
+        return \DB::table('raiops_role_permissions')
+            ->join('raiops_permissions', 'raiops_permissions.id', '=', 'raiops_role_permissions.permission_id')
+            ->where('raiops_role_permissions.role', $role)
+            ->pluck('raiops_permissions.name')
             ->toArray();
     }
 
@@ -32,10 +32,10 @@ class RainboPermission extends Model
      */
     public static function roleHasPermission(string $role, string $permission): bool
     {
-        return \DB::table('rainbo_role_permissions')
-            ->join('rainbo_permissions', 'rainbo_permissions.id', '=', 'rainbo_role_permissions.permission_id')
-            ->where('rainbo_role_permissions.role', $role)
-            ->where('rainbo_permissions.name', $permission)
+        return \DB::table('raiops_role_permissions')
+            ->join('raiops_permissions', 'raiops_permissions.id', '=', 'raiops_role_permissions.permission_id')
+            ->where('raiops_role_permissions.role', $role)
+            ->where('raiops_permissions.name', $permission)
             ->exists();
     }
 

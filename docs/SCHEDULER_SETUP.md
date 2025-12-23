@@ -1,21 +1,21 @@
 # ⏰ Scheduled Sync Setup Guide
 
-*"Time Stand Still" - Setting up automated syncs for RAINBO*
+*"Time Stand Still" - Setting up automated syncs for RAIOPS*
 
 ## Overview
 
-RAINBO uses Laravel's task scheduler to automatically sync data from RDS instances. This keeps cache tables up-to-date without manual intervention.
+RAIOPS uses Laravel's task scheduler to automatically sync data from RDS instances. This keeps cache tables up-to-date without manual intervention.
 
 ## Scheduled Tasks
 
 ### 1. User Email Routing Sync
-- **Command**: `rainbo:sync-user-routing`
+- **Command**: `raiops:sync-user-routing`
 - **Frequency**: Every 15 minutes
 - **Purpose**: Syncs `user_email_routing_cache` from master RDS
-- **Why**: Keeps user lookup data fresh in RAINBO
+- **Why**: Keeps user lookup data fresh in RAIOPS
 
 ### 2. Tenant Summaries Sync
-- **Command**: `rainbo:sync-tenant-summaries`
+- **Command**: `raiops:sync-tenant-summaries`
 - **Frequency**: Hourly
 - **Purpose**: Syncs tenant summaries (counts, status) from all RDS instances
 - **Why**: Keeps tenant list and statistics current
@@ -24,7 +24,7 @@ RAINBO uses Laravel's task scheduler to automatically sync data from RDS instanc
 - **Command**: `sync:ghost-users`
 - **Frequency**: Daily at 2:00 AM
 - **Purpose**: Ensures ghost users exist on all RDS instances
-- **Why**: Needed for RAINBO admin impersonation
+- **Why**: Needed for RAIOPS admin impersonation
 
 ## Setup Instructions
 
@@ -33,7 +33,7 @@ RAINBO uses Laravel's task scheduler to automatically sync data from RDS instanc
 Run the scheduler manually to test:
 
 ```bash
-cd /var/www/html/rainbo
+cd /var/www/html/raiops
 php artisan schedule:work
 ```
 
@@ -44,7 +44,7 @@ This will run the scheduler in the foreground and execute tasks at their schedul
 Add this single cron entry to your server's crontab:
 
 ```bash
-* * * * * cd /var/www/html/rainbo && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /var/www/html/raiops && php artisan schedule:run >> /dev/null 2>&1
 ```
 
 **To add it:**
@@ -65,8 +65,8 @@ Then paste the line above and save.
 
 2. **Test a task manually:**
    ```bash
-   php artisan rainbo:sync-user-routing
-   php artisan rainbo:sync-tenant-summaries
+   php artisan raiops:sync-user-routing
+   php artisan raiops:sync-tenant-summaries
    ```
 
 3. **Check logs:**
@@ -96,7 +96,7 @@ Then paste the line above and save.
 ### Ghost Users Sync
 - Runs daily at 2:00 AM
 - Prevents overlapping runs
-- Ensures all RAINBO admins have ghost users on all RDS instances
+- Ensures all RAIOPS admins have ghost users on all RDS instances
 
 ## Troubleshooting
 
@@ -115,7 +115,7 @@ Then paste the line above and save.
    ```
 
 3. **Verify path in cron:**
-   - Make sure the path `/var/www/html/rainbo` is correct
+   - Make sure the path `/var/www/html/raiops` is correct
    - Use absolute paths in cron entries
 
 4. **Check permissions:**
@@ -131,7 +131,7 @@ Then paste the line above and save.
 
 2. **Run command manually to see errors:**
    ```bash
-   php artisan rainbo:sync-user-routing
+   php artisan raiops:sync-user-routing
    ```
 
 3. **Check RDS connections:**
@@ -156,19 +156,19 @@ You can always run syncs manually:
 
 ```bash
 # Sync user routing
-php artisan rainbo:sync-user-routing
+php artisan raiops:sync-user-routing
 
 # Sync tenant summaries
-php artisan rainbo:sync-tenant-summaries
+php artisan raiops:sync-tenant-summaries
 
 # Sync all (both)
-php artisan rainbo:sync-all
+php artisan raiops:sync-all
 
 # Force sync (ignore cache freshness)
-php artisan rainbo:sync-tenant-summaries --force
+php artisan raiops:sync-tenant-summaries --force
 
 # Sync specific RDS
-php artisan rainbo:sync-tenant-summaries --rds=2
+php artisan raiops:sync-tenant-summaries --rds=2
 
 # Sync ghost users
 php artisan sync:ghost-users
@@ -178,7 +178,7 @@ php artisan sync:ghost-users
 
 ### Check Last Sync Times
 
-In RAINBO UI:
+In RAIOPS UI:
 - **User Routing**: Check `user_email_routing_cache.synced_at` column
 - **Tenant Summaries**: Check `tenant_master.cache_refreshed_at` column
 
@@ -191,11 +191,11 @@ Consider setting up monitoring/alerts for:
 
 ## Schedule Customization
 
-To modify schedules, edit `/var/www/html/rainbo/routes/console.php`:
+To modify schedules, edit `/var/www/html/raiops/routes/console.php`:
 
 ```php
 // Change frequency
-Schedule::command('rainbo:sync-user-routing')
+Schedule::command('raiops:sync-user-routing')
     ->everyTenMinutes()  // Instead of everyFifteenMinutes
     ->withoutOverlapping()
     ->runInBackground();

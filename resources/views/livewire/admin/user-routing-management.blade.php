@@ -132,7 +132,7 @@
         </div>
 
         <div class="col-sm-7 col-md-8 text-end">
-            @canRainbo('user.edit')
+            @canRaiOps('user.edit')
                 <button 
                     type="button" 
                     class="btn btn-outline-primary btn-sm"
@@ -147,7 +147,7 @@
                         <span class="spinner-border spinner-border-sm me-1"></span> Syncing...
                     </span>
                 </button>
-            @endcanRainbo
+            @endcanRaiOps
         </div>
     </div>
 
@@ -207,7 +207,7 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    @canRainbo('user.edit')
+                                    @canRaiOps('user.edit')
                                         <button
                                             wire:click="deleteEntry({{ $entry->id }})"
                                             wire:confirm="Remove this email from the routing cache?"
@@ -216,7 +216,7 @@
                                         >
                                             <i class="bi bi-trash"></i>
                                         </button>
-                                    @endcanRainbo
+                                    @endcanRaiOps
                                 </td>
                             </tr>
                         @empty
@@ -224,14 +224,14 @@
                                 <td colspan="6" class="text-center text-muted py-4">
                                     <i class="bi bi-envelope-x fs-1 d-block mb-2"></i>
                                     No routing entries found.
-                                    @canRainbo('user.edit')
+                                    @canRaiOps('user.edit')
                                         @if($masterRds)
                                             <br>
                                             <button wire:click="syncFromRds" class="btn btn-primary btn-sm mt-2">
                                                 <i class="bi bi-arrow-repeat me-1"></i> Sync from Master RDS
                                             </button>
                                         @endif
-                                    @endcanRainbo
+                                    @endcanRaiOps
                                 </td>
                             </tr>
                         @endforelse

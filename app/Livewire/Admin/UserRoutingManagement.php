@@ -137,7 +137,7 @@ class UserRoutingManagement extends Component
     public function syncFromRds(): void
     {
         try {
-            Artisan::call('rainbo:sync-user-routing');
+            Artisan::call('raiops:sync-user-routing');
             session()->flash('success', 'User routing sync completed. ' . trim(Artisan::output()));
         } catch (\Exception $e) {
             session()->flash('error', 'Sync failed: ' . $e->getMessage());

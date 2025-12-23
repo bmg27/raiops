@@ -14,7 +14,7 @@ class ManageMaster extends Component
         $user = \App\Models\User::find($userId);
         if($user) $this->userId = $userId; else $this->userId = null;
         
-        // In RAINBO, all users are super admins, so we can show all tabs
+        // In RAIOPS, all users are super admins, so we can show all tabs
         // But keep the check for consistency
         $isSuperAdmin = auth()->check() && auth()->user()->hasRole('Super Admin');
         if (!$isSuperAdmin && in_array($this->tab, ['permissions', 'menu_items', 'organize_menu'])) {

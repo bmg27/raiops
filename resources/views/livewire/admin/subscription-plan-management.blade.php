@@ -8,7 +8,7 @@
             <p class="text-muted mb-0">Manage subscription plan tiers and pricing</p>
         </div>
         <div>
-            @canRainbo('billing.edit')
+            @canRaiOps('billing.edit')
                 <button 
                     type="button" 
                     class="btn btn-primary btn-sm"
@@ -16,7 +16,7 @@
                 >
                     <i class="bi bi-plus-lg me-1"></i> Add Plan
                 </button>
-            @endcanRainbo
+            @endcanRaiOps
         </div>
     </div>
 
@@ -120,7 +120,7 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    @canRainbo('billing.edit')
+                                    @canRaiOps('billing.edit')
                                         <button
                                             wire:click="toggleActive({{ $plan->id }})"
                                             class="btn btn-sm btn-outline-{{ $plan->is_active ? 'warning' : 'success' }}"
@@ -145,7 +145,7 @@
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         @endif
-                                    @endcanRainbo
+                                    @endcanRaiOps
                                 </td>
                             </tr>
                         @empty

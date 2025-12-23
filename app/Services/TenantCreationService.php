@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 /**
- * Service for creating tenants on RDS instances from RAINBO
+ * Service for creating tenants on RDS instances from RAIOPS
  * 
  * "The Garden" - Creating new tenants without invitation flow
  */
@@ -156,7 +156,7 @@ class TenantCreationService
                 ]);
             }
 
-            // Sync to tenant_master in RAINBO first (we need the ID for user_email_routing_cache)
+            // Sync to tenant_master in RAIOPS first (we need the ID for user_email_routing_cache)
             $userCount = 1; // We just created the owner
             $locationCount = 1; // We just created the first location
 
@@ -217,7 +217,7 @@ class TenantCreationService
 
             DB::commit();
 
-            Log::info('Tenant created successfully from RAINBO', [
+            Log::info('Tenant created successfully from RAIOPS', [
                 'tenant_master_id' => $tenantMaster->id,
                 'remote_tenant_id' => $tenantId,
                 'rds_instance_id' => $rdsInstance->id,
@@ -235,7 +235,7 @@ class TenantCreationService
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error('Failed to create tenant from RAINBO', [
+            Log::error('Failed to create tenant from RAIOPS', [
                 'rds_instance_id' => $rdsInstance->id,
                 'data' => $data,
                 'error' => $e->getMessage(),

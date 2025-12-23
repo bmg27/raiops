@@ -16,7 +16,7 @@
         ></i>
 
         <a class="logo-details text-decoration-none" href="#">
-            <img class="logo-text" src="{{ asset('images/logo.png') }}" alt="rainbo" onerror="this.style.display='none'">
+            <img style="height: 100%" class="logo-text" src="{{ asset('images/logo.png') }}" alt="raiops" onerror="this.style.display='none'">
         </a>
     </div>
 
@@ -115,16 +115,16 @@
         <li>
             <div class="link-icon">
                 <a href="#" class="navigation-item"
-                   onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                   onclick="event.preventDefault();document.getElementById('logout-form-sidebar').submit();">
                     <i class="bi bi-box-arrow-right"></i>
                     <span class="link-name text-nowrap">Log Out</span>
                 </a>
             </div>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+            <form id="logout-form-sidebar" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
             <ul class="sub-menu">
                 <li>
                     <a href="#" class="link-name"
-                       onclick="event.preventDefault();document.getElementById('logout-form').submit();"> Log Out </a>
+                       onclick="event.preventDefault();document.getElementById('logout-form-sidebar').submit();"> Log Out </a>
                 </li>
             </ul>
         </li>

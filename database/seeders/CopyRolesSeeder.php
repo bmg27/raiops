@@ -77,7 +77,7 @@ class CopyRolesSeeder extends Seeder
                         ->first();
 
                     if ($raiPermission) {
-                        // Find permission in RAINBO by name
+                        // Find permission in RAIOPS by name
                         $permission = \App\Models\Permission::where('name', $raiPermission->name)
                             ->where('guard_name', $raiPermission->guard_name)
                             ->first();

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('rainbo_user_id')->nullable();
+            $table->unsignedBigInteger('raiops_user_id')->nullable();
             $table->string('action', 100); // 'created', 'updated', 'deleted', 'impersonated', etc.
             $table->string('model_type')->nullable(); // 'TenantMaster', 'RdsInstance', etc.
             $table->unsignedBigInteger('model_id')->nullable();
@@ -23,10 +23,10 @@ return new class extends Migration
             $table->json('new_values')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
-            $table->enum('source', ['rainbo', 'rai_push'])->default('rainbo');
+            $table->enum('source', ['raiops', 'rai_push'])->default('raiops');
             $table->timestamp('created_at')->useCurrent();
 
-            $table->index('rainbo_user_id');
+            $table->index('raiops_user_id');
             $table->index('action');
             $table->index(['model_type', 'model_id']);
             $table->index('tenant_master_id');

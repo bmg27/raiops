@@ -11,12 +11,12 @@ Artisan::command('inspire', function () {
 /**
  * Scheduled Tasks
  * 
- * These sync commands keep RAINBO's cache tables synchronized with live RDS data.
+ * These sync commands keep RAIOPS's cache tables synchronized with live RDS data.
  * Run 'php artisan schedule:work' in development or set up cron in production.
  * 
  * IMPORTANT: Tenant sync runs first, then user routing sync (tenant sync is prerequisite)
  */
-Schedule::command('rainbo:sync-tenant-summaries')
+Schedule::command('raiops:sync-tenant-summaries')
     ->hourly()
     ->withoutOverlapping()
     ->runInBackground()
@@ -25,7 +25,7 @@ Schedule::command('rainbo:sync-tenant-summaries')
     })
     ->description('Sync tenant summaries from all RDS instances');
 
-Schedule::command('rainbo:sync-user-routing')
+Schedule::command('raiops:sync-user-routing')
     ->everyFifteenMinutes()
     ->withoutOverlapping()
     ->runInBackground()
@@ -34,7 +34,7 @@ Schedule::command('rainbo:sync-user-routing')
     })
     ->description('Sync user email routing cache from master RDS');
 
-// Optional: Sync ghost users daily (in case new RAINBO admins are added)
+// Optional: Sync ghost users daily (in case new RAIOPS admins are added)
 Schedule::command('sync:ghost-users')
     ->daily()
     ->at('02:00')

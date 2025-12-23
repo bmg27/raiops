@@ -50,7 +50,7 @@
             </div>
 
             <div class="col-12 col-md-5 text-end">
-                @canRainbo('tenant.edit')
+                @canRaiOps('tenant.edit')
                     <button 
                         type="button" 
                         class="btn btn-primary btn-sm me-2"
@@ -71,7 +71,7 @@
                             <span class="spinner-border spinner-border-sm me-1"></span> Syncing...
                         </span>
                     </button>
-                @endcanRainbo
+                @endcanRaiOps
             </div>
         </div>
 
@@ -173,7 +173,7 @@
                                         >
                                             <i class="bi bi-eye"></i>
                                         </button>
-                                        @canRainbo('tenant.edit')
+                                        @canRaiOps('tenant.edit')
                                             <button
                                                 wire:click="syncTenant({{ $tenant->id }})"
                                                 class="btn btn-sm btn-outline-secondary"
@@ -183,7 +183,7 @@
                                             >
                                                 <i class="bi bi-arrow-repeat"></i>
                                             </button>
-                                        @endcanRainbo
+                                        @endcanRaiOps
                                     </td>
                                 </tr>
                             @empty
@@ -191,12 +191,12 @@
                                     <td colspan="8" class="text-center text-muted py-4">
                                         <i class="bi bi-building-x fs-1 d-block mb-2"></i>
                                         No tenants found.
-                                        @canRainbo('tenant.edit')
+                                        @canRaiOps('tenant.edit')
                                             <br>
                                             <button wire:click="syncAllTenants" class="btn btn-primary btn-sm mt-2">
                                                 <i class="bi bi-arrow-repeat me-1"></i> Sync Tenants from RDS
                                             </button>
-                                        @endcanRainbo
+                                        @endcanRaiOps
                                     </td>
                                 </tr>
                             @endforelse

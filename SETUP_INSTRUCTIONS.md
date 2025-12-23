@@ -1,4 +1,4 @@
-# RAINBO Setup Instructions
+# RAIOPS Setup Instructions
 
 ## 🚀 Quick Start
 
@@ -7,11 +7,11 @@
 Add these to your `.env` file:
 
 ```env
-# RAINBO Database (main database)
+# RAIOPS Database (main database)
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=rainbo
+DB_DATABASE=raiops
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 
@@ -26,7 +26,7 @@ RAI_DB_PASSWORD=your_password
 ### 2. Run Migrations
 
 ```bash
-cd /var/www/html/rainbo
+cd /var/www/html/raiops
 php artisan migrate
 ```
 
@@ -66,19 +66,19 @@ npm run build
 
 ### 6. Copy Vendor Assets
 
-Copy these files from RAI project to RAINBO:
+Copy these files from RAI project to RAIOPS:
 
 ```bash
 # Bootstrap CSS
-cp /var/www/html/rai/public/css/vendor/bootstrap.min.css /var/www/html/rainbo/public/css/vendor/
-cp /var/www/html/rai/public/css/vendor/bootstrap-icons.min.css /var/www/html/rainbo/public/css/vendor/
-cp /var/www/html/rai/public/css/vendor/daterangepicker.css /var/www/html/rainbo/public/css/vendor/
+cp /var/www/html/rai/public/css/vendor/bootstrap.min.css /var/www/html/raiops/public/css/vendor/
+cp /var/www/html/rai/public/css/vendor/bootstrap-icons.min.css /var/www/html/raiops/public/css/vendor/
+cp /var/www/html/rai/public/css/vendor/daterangepicker.css /var/www/html/raiops/public/css/vendor/
 
 # JavaScript
-cp /var/www/html/rai/public/js/vendor/*.js /var/www/html/rainbo/public/js/vendor/
+cp /var/www/html/rai/public/js/vendor/*.js /var/www/html/raiops/public/js/vendor/
 
 # Fonts
-cp -r /var/www/html/rai/public/fonts/* /var/www/html/rainbo/public/fonts/
+cp -r /var/www/html/rai/public/fonts/* /var/www/html/raiops/public/fonts/
 ```
 
 ### 7. Set Up Storage Link

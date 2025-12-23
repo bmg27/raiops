@@ -92,20 +92,10 @@
                                     <button
                                         wire:click="openModal({{ $rds->id }})"
                                         class="btn btn-sm btn-outline-primary"
-                                        title="Edit"
+                                        title="View"
                                     >
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    @if(!$rds->is_master)
-                                        <button
-                                            wire:click="delete({{ $rds->id }})"
-                                            wire:confirm="Are you sure you want to delete this RDS instance?"
-                                            class="btn btn-sm btn-outline-danger"
-                                            title="Delete"
-                                        >
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -137,7 +127,7 @@
                     <div class="modal-header">
                         <h5 class="modal-title">
                             <i class="bi bi-database me-2"></i>
-                            {{ $editId ? 'Edit RDS Instance' : 'Add RDS Instance' }}
+                            {{ $editId ? 'View RDS Instance' : 'Add RDS Instance' }}
                         </h5>
                         <button type="button" class="btn-close" wire:click="closeModal"></button>
                     </div>
@@ -152,6 +142,7 @@
                                         wire:model="name"
                                         class="form-control @error('name') is-invalid @enderror"
                                         placeholder="e.g., Production RDS 1"
+                                        @if($editId) readonly @endif
                                     />
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -166,6 +157,7 @@
                                         wire:model="app_url"
                                         class="form-control @error('app_url') is-invalid @enderror"
                                         placeholder="https://app.example.com"
+                                        @if($editId) readonly @endif
                                     />
                                     @error('app_url')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -181,6 +173,7 @@
                                         wire:model="host"
                                         class="form-control @error('host') is-invalid @enderror"
                                         placeholder="e.g., db.example.com or 127.0.0.1"
+                                        @if($editId) readonly @endif
                                     />
                                     @error('host')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -196,6 +189,7 @@
                                         class="form-control @error('port') is-invalid @enderror"
                                         min="1"
                                         max="65535"
+                                        @if($editId) readonly @endif
                                     />
                                     @error('port')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -210,6 +204,9 @@
                                         wire:model="username"
                                         class="form-control @error('username') is-invalid @enderror"
                                         placeholder="Database username"
+                                        autocomplete="off"
+                                        data-lpignore="true"
+                                        @if($editId) readonly @endif
                                     />
                                     @error('username')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -229,12 +226,15 @@
                                         wire:model="password"
                                         class="form-control @error('password') is-invalid @enderror"
                                         placeholder="{{ $editId ? 'Leave blank to keep current' : 'Database password' }}"
+                                        autocomplete="off"
+                                        data-lpignore="true"
+                                        @if($editId) readonly @endif
                                     />
                                     @error('password')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                     @if($editId)
-                                        <small class="text-muted">Leave blank to keep existing password</small>
+                                        <small class="text-muted">Password cannot be changed in view mode</small>
                                     @endif
                                 </div>
 
@@ -246,6 +246,7 @@
                                         wire:model="rai_database"
                                         class="form-control @error('rai_database') is-invalid @enderror"
                                         placeholder="e.g., rai_production"
+                                        @if($editId) readonly @endif
                                     />
                                     @error('rai_database')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -260,6 +261,7 @@
                                         wire:model="providers_database"
                                         class="form-control @error('providers_database') is-invalid @enderror"
                                         placeholder="e.g., providers_production (optional)"
+                                        @if($editId) readonly @endif
                                     />
                                     @error('providers_database')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -274,6 +276,7 @@
                                             wire:model="is_active"
                                             class="form-check-input"
                                             id="isActive"
+                                            @if($editId) disabled @endif
                                         />
                                         <label class="form-check-label" for="isActive">Active</label>
                                     </div>
@@ -287,6 +290,7 @@
                                             wire:model="is_master"
                                             class="form-check-input"
                                             id="isMaster"
+                                            @if($editId) disabled @endif
                                         />
                                         <label class="form-check-label" for="isMaster">Master RDS</label>
                                     </div>
@@ -301,6 +305,7 @@
                                         class="form-control"
                                         rows="2"
                                         placeholder="Optional notes about this RDS instance..."
+                                        @if($editId) readonly @endif
                                     ></textarea>
                                 </div>
                             </div>
@@ -320,13 +325,19 @@
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" wire:click="testConnection">
-                            <i class="bi bi-plug me-1"></i> Test Connection
+                        @if(!$editId)
+                            <button type="button" class="btn btn-outline-secondary" wire:click="testConnection">
+                                <i class="bi bi-plug me-1"></i> Test Connection
+                            </button>
+                        @endif
+                        <button type="button" class="btn btn-secondary" wire:click="closeModal">
+                            {{ $editId ? 'Close' : 'Cancel' }}
                         </button>
-                        <button type="button" class="btn btn-secondary" wire:click="closeModal">Cancel</button>
-                        <button type="button" class="btn btn-primary" wire:click="save">
-                            <i class="bi bi-check-lg me-1"></i> {{ $editId ? 'Update' : 'Create' }}
-                        </button>
+                        @if(!$editId)
+                            <button type="button" class="btn btn-primary" wire:click="save">
+                                <i class="bi bi-check-lg me-1"></i> Create
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>

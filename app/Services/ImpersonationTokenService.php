@@ -11,9 +11,9 @@ use Illuminate\Support\Str;
 /**
  * ImpersonationTokenService
  * 
- * Generates secure JWT tokens for RAINBO admins to impersonate
+ * Generates secure JWT tokens for RAIOPS admins to impersonate
  * into RAI tenant instances. The token is validated by RAI's
- * /rainbo-impersonate endpoint.
+ * /raiops-impersonate endpoint.
  */
 class ImpersonationTokenService
 {
@@ -33,14 +33,14 @@ class ImpersonationTokenService
             throw new \InvalidArgumentException('Tenant has no associated RDS instance');
         }
 
-        // Get admin's RAINBO permissions
-        $permissions = $admin->getRainboPermissions();
+        // Get admin's RAIOPS permissions
+        $permissions = $admin->getRaiOpsPermissions();
 
         $payload = [
             // Admin identification
-            'rainbo_admin_id' => $admin->id,
-            'rainbo_admin_email' => $admin->email,
-            'rainbo_admin_name' => $admin->name,
+            'raiops_admin_id' => $admin->id,
+            'raiops_admin_email' => $admin->email,
+            'raiops_admin_name' => $admin->name,
             
             // Tenant/RDS targeting
             'tenant_master_id' => $tenant->id,
@@ -75,7 +75,7 @@ class ImpersonationTokenService
         $baseUrl = rtrim($rds->app_url, '/');
         $timestamp = now()->timestamp;
         
-        return $baseUrl . '/rainbo-impersonate?token=' . urlencode($token) . '&_t=' . $timestamp;
+        return $baseUrl . '/raiops-impersonate?token=' . urlencode($token) . '&_t=' . $timestamp;
     }
 
     /**
@@ -84,7 +84,7 @@ class ImpersonationTokenService
     public function launchImpersonation(User $admin, TenantMaster $tenant): array
     {
         // Check permission
-        if (!$admin->hasRainboPermission('tenant.impersonate')) {
+        if (!$admin->hasRaiOpsPermission('tenant.impersonate')) {
             throw new \Exception('You do not have permission to impersonate tenants.');
         }
 
@@ -118,11 +118,11 @@ class ImpersonationTokenService
      */
     protected function getSecret(): string
     {
-        $secret = config('rainbo.impersonation_secret');
+        $secret = config('raiops.impersonation_secret');
         
         if (empty($secret) || strlen($secret) < 32) {
             throw new \RuntimeException(
-                'RAINBO_IMPERSONATION_SECRET must be set in .env and be at least 32 characters.'
+                'RAIOPS_IMPERSONATION_SECRET must be set in .env and be at least 32 characters.'
             );
         }
 

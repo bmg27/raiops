@@ -10,7 +10,7 @@ use Livewire\WithPagination;
 /**
  * SubscriptionPlanManagement Component
  * 
- * RAINBO Command Central's subscription plan management.
+ * RAIOPS Command Central's subscription plan management.
  * Create, edit, and manage subscription plans.
  */
 class SubscriptionPlanManagement extends Component

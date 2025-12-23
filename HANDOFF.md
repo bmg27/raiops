@@ -1,8 +1,8 @@
-# RAINBO Project - Complete Handoff Documentation
+# RAIOPS Project - Complete Handoff Documentation
 
 ## Project Overview
 
-**RAINBO** (RAI Back Office) is a standalone Laravel 11 application that serves as the administrative back office for the RAI restaurant management system. It provides super admin users with tools to manage tenants, users, roles, permissions, and menu items across the entire multi-tenant RAI ecosystem.
+**RAIOPS** (RAI Back Office) is a standalone Laravel 11 application that serves as the administrative back office for the RAI restaurant management system. It provides super admin users with tools to manage tenants, users, roles, permissions, and menu items across the entire multi-tenant RAI ecosystem.
 
 ### Key Technologies
 - **Laravel 11** (PHP 8.3)
@@ -13,8 +13,8 @@
 - **MySQL** (database)
 
 ### Project Location
-- **Linux Path**: `/var/www/html/rainbo`
-- **Windows Path**: `z:\var\www\html\rainbo` (WSL)
+- **Linux Path**: `/var/www/html/raiops`
+- **Windows Path**: `z:\var\www\html\raiops` (WSL)
 
 ---
 
@@ -22,7 +22,7 @@
 
 ### Core Directories
 ```
-rainbo/
+raiops/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/
@@ -122,17 +122,17 @@ Add these to your `.env` file:
 
 ```env
 # Application
-APP_NAME=RAINBO
+APP_NAME=RAIOPS
 APP_ENV=local
 APP_KEY=base64:... (generate with: php artisan key:generate)
 APP_DEBUG=true
-APP_URL=http://rainbo.test
+APP_URL=http://raiops.test
 
-# Database (RAINBO database)
+# Database (RAIOPS database)
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=rainbo
+DB_DATABASE=raiops
 DB_USERNAME=root
 DB_PASSWORD=your_password
 
@@ -160,7 +160,7 @@ QUEUE_CONNECTION=sync
 
 The project uses two database connections:
 
-1. **Default Connection** (`mysql`): The RAINBO database
+1. **Default Connection** (`mysql`): The RAIOPS database
 2. **RAI Connection** (`rai`): Connection to the existing RAI production database
 
 The RAI connection is configured in `config/database.php`:
@@ -185,7 +185,7 @@ The RAI connection is configured in `config/database.php`:
 
 ```bash
 # Navigate to project directory
-cd /var/www/html/rainbo
+cd /var/www/html/raiops
 
 # Install PHP dependencies
 composer install
@@ -542,7 +542,7 @@ php artisan db:seed --class=CopyTenantDataSeeder
 php artisan serve
 
 # Or use your web server (Apache/Nginx)
-# Access at: http://rainbo.test (or your configured domain)
+# Access at: http://raiops.test (or your configured domain)
 ```
 
 ### Making Changes
@@ -608,7 +608,7 @@ Check logs in `storage/logs/laravel.log`
 
 ## Security Considerations
 
-1. **Super Admin Access**: All users in RAINBO should be super admins. Regular tenant users should not have access.
+1. **Super Admin Access**: All users in RAIOPS should be super admins. Regular tenant users should not have access.
 
 2. **Permission Checks**: All routes use `check.permission` middleware. Ensure permissions are properly set.
 

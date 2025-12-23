@@ -12,10 +12,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // =====================================================================
-        // RAINBO Multi-RDS Setup
+        // RAIOPS Multi-RDS Setup
         // =====================================================================
         
-        // Step 1: Create system admin user (for RAINBO access)
+        // Step 1: Create system admin user (for RAIOPS access)
         $this->call([
             SystemAdminSeeder::class,
         ]);

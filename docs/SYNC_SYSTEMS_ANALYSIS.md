@@ -1,13 +1,13 @@
 # 🔄 Sync Systems Analysis: user_email_routing, Tenant Sync, Password Sync
 
-*"The Trees" - Understanding how data flows between RAINBO and RAI*
+*"The Trees" - Understanding how data flows between RAIOPS and RAI*
 
 ## Overview
 
 The system uses three main synchronization mechanisms to keep data consistent across multiple RDS instances:
 
 1. **user_email_routing** - Central authentication directory
-2. **Tenant Sync** - Keeps tenant summaries in RAINBO up-to-date
+2. **Tenant Sync** - Keeps tenant summaries in RAIOPS up-to-date
 3. **Password Sync** - Keeps passwords synchronized across tenants for multi-tenant users
 
 ---
@@ -24,10 +24,10 @@ Central directory that maps email addresses to their tenant and RDS instance, en
 - Contains: email, tenant_id, rds_instance_id, password_hash, user_id, status
 - **This is the source of truth for authentication**
 
-**Cache Table (RAINBO):**
-- Table: `user_email_routing_cache` (in RAINBO's database)
+**Cache Table (RAIOPS):**
+- Table: `user_email_routing_cache` (in RAIOPS's database)
 - Contains: email, tenant_master_id, remote_user_id, rds_instance_id, synced_at
-- **This is a read-only cache for quick lookups in RAINBO**
+- **This is a read-only cache for quick lookups in RAIOPS**
 
 ### How It Works
 
@@ -48,14 +48,14 @@ Central directory that maps email addresses to their tenant and RDS instance, en
    - Uses `UserEmailRouting::updateOrCreateRouting()` to maintain the table
 
 3. **Tenant Creation** (`TenantCreationService.php`):
-   - When creating a tenant from RAINBO, automatically creates entry in `user_email_routing`
+   - When creating a tenant from RAIOPS, automatically creates entry in `user_email_routing`
    - Stores password hash, user_id, tenant_id, rds_instance_id
 
-#### In RAINBO (Management):
+#### In RAIOPS (Management):
 1. **Sync Command** (`SyncUserRouting.php`):
-   - Command: `php artisan rainbo:sync-user-routing`
-   - Syncs data from master RDS `user_email_routing` → RAINBO `user_email_routing_cache`
-   - Used for quick lookups in RAINBO UI without querying RDS
+   - Command: `php artisan raiops:sync-user-routing`
+   - Syncs data from master RDS `user_email_routing` → RAIOPS `user_email_routing_cache`
+   - Used for quick lookups in RAIOPS UI without querying RDS
    - Can truncate cache with `--truncate` flag
 
 2. **User Routing Management** (`UserRoutingManagement.php`):
@@ -74,12 +74,12 @@ Central directory that maps email addresses to their tenant and RDS instance, en
 ## 2. Tenant Sync System
 
 ### Purpose
-Keeps the `tenant_master` table in RAINBO synchronized with actual tenant data from each RDS instance.
+Keeps the `tenant_master` table in RAIOPS synchronized with actual tenant data from each RDS instance.
 
 ### Architecture
 
-**RAINBO Table:**
-- Table: `tenant_master` (in RAINBO's database)
+**RAIOPS Table:**
+- Table: `tenant_master` (in RAIOPS's database)
 - Contains: name, primary_contact_name, primary_contact_email, status, cached_user_count, cached_location_count, cache_refreshed_at
 - Links to: `rds_instance_id` + `remote_tenant_id` (unique combination)
 
@@ -90,7 +90,7 @@ Keeps the `tenant_master` table in RAINBO synchronized with actual tenant data f
 ### How It Works
 
 #### Sync Command (`SyncTenantSummaries.php`):
-- Command: `php artisan rainbo:sync-tenant-summaries`
+- Command: `php artisan raiops:sync-tenant-summaries`
 - Options:
   - `--rds=ID` - Sync from specific RDS only
   - `--force` - Force sync even if cache is fresh
@@ -209,7 +209,7 @@ Entry created/updated with password_hash, user_id, tenant_id, rds_instance_id
 
 ### Tenant Sync Flow:
 ```
-RAINBO: Sync Command or UI Button
+RAIOPS: Sync Command or UI Button
     ↓
 Connect to RDS Instance
     ↓
@@ -218,7 +218,7 @@ Fetch tenants from RDS
 For each tenant:
     - Get user count
     - Get location count
-    - Update tenant_master in RAINBO
+    - Update tenant_master in RAIOPS
 ```
 
 ### Password Sync Flow:
@@ -240,15 +240,15 @@ If passwords out of sync:
 ## Potential Issues & Recommendations
 
 ### 1. user_email_routing Cache Staleness
-**Issue**: RAINBO's `user_email_routing_cache` can become stale
+**Issue**: RAIOPS's `user_email_routing_cache` can become stale
 **Solution**: 
-- Schedule `rainbo:sync-user-routing` to run periodically (e.g., every 15 minutes)
-- Or trigger sync when looking up users in RAINBO UI
+- Schedule `raiops:sync-user-routing` to run periodically (e.g., every 15 minutes)
+- Or trigger sync when looking up users in RAIOPS UI
 
 ### 2. Tenant Cache Staleness
 **Issue**: `tenant_master` cached counts can be outdated
 **Solution**:
-- Schedule `rainbo:sync-tenant-summaries` to run periodically (e.g., hourly)
+- Schedule `raiops:sync-tenant-summaries` to run periodically (e.g., hourly)
 - Or rely on live data refresh when viewing tenant details
 
 ### 3. Password Sync Not Automatic
@@ -270,13 +270,13 @@ If passwords out of sync:
 
 ## Commands Reference
 
-### RAINBO Commands:
+### RAIOPS Commands:
 ```bash
 # Sync user routing cache from master RDS
-php artisan rainbo:sync-user-routing [--truncate]
+php artisan raiops:sync-user-routing [--truncate]
 
 # Sync tenant summaries from all RDS instances
-php artisan rainbo:sync-tenant-summaries [--rds=ID] [--force]
+php artisan raiops:sync-tenant-summaries [--rds=ID] [--force]
 
 # Sync ghost users to all RDS instances
 php artisan sync:ghost-users [--admin=ID] [--rds=ID] [--dry-run]

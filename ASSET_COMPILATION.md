@@ -2,7 +2,7 @@
 
 ## Overview
 
-RAINBO uses Vite for asset compilation. The project has been configured to compile Bootstrap-based CSS and JavaScript files.
+RAIOPS uses Vite for asset compilation. The project has been configured to compile Bootstrap-based CSS and JavaScript files.
 
 ## Quick Start
 

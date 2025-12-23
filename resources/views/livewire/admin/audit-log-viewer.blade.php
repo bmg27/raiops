@@ -5,7 +5,7 @@
             <h4 class="mb-1">
                 <i class="bi bi-journal-text me-2"></i>Audit Logs
             </h4>
-            <p class="text-muted mb-0">Track all administrative actions across RAINBO</p>
+            <p class="text-muted mb-0">Track all administrative actions across RAIOPS</p>
         </div>
         <div>
             <button type="button" class="btn btn-outline-secondary btn-sm" wire:click="clearFilters">
@@ -193,7 +193,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge {{ $log->source === 'rainbo' ? 'bg-primary' : 'bg-secondary' }}">
+                                    <span class="badge {{ $log->source === 'raiops' ? 'bg-primary' : 'bg-secondary' }}">
                                         {{ strtoupper($log->source) }}
                                     </span>
                                 </td>
@@ -264,7 +264,7 @@
                             </div>
                             <div class="col-md-6">
                                 <h6 class="text-muted mb-2">Source</h6>
-                                <span class="badge {{ $selectedLogDetails['source'] === 'rainbo' ? 'bg-primary' : 'bg-secondary' }}">
+                                <span class="badge {{ $selectedLogDetails['source'] === 'raiops' ? 'bg-primary' : 'bg-secondary' }}">
                                     {{ strtoupper($selectedLogDetails['source']) }}
                                 </span>
                             </div>

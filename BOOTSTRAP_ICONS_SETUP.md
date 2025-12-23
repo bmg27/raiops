@@ -1,8 +1,8 @@
-# Bootstrap Icons Setup - RAINBO
+# Bootstrap Icons Setup - RAIOPS
 
 ## Status: ✅ Working!
 
-Bootstrap Icons are now properly configured and working in RAINBO.
+Bootstrap Icons are now properly configured and working in RAIOPS.
 
 ## What Was Fixed
 
@@ -13,7 +13,7 @@ The Bootstrap Icons font files were in `resources/fonts/BootstrapIcons/` but nee
 - `bootstrap-icons.woff2`
 - `bootstrap-icons.woff`
 
-**Location:** `/var/www/html/rainbo/public/fonts/`
+**Location:** `/var/www/html/raiops/public/fonts/`
 
 ### 2. CSS Files Compiled
 Since we're not using Vite/npm yet, the CSS `@import` statements don't work in the browser. We compiled all vendor CSS files into a single file.
@@ -48,7 +48,7 @@ Bootstrap Icons work with simple class names:
 
 ## Available Icons
 
-Bootstrap Icons includes 2000+ icons. Common ones used in RAINBO:
+Bootstrap Icons includes 2000+ icons. Common ones used in RAIOPS:
 
 - `bi-house` - Home
 - `bi-gear` - Settings/Admin
@@ -85,7 +85,7 @@ cat resources/css/vendor/bootstrap.min.css \
 ## File Structure
 
 ```
-rainbo/
+raiops/
 ├── resources/
 │   ├── css/
 │   │   └── vendor/

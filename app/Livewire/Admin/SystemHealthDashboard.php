@@ -12,7 +12,7 @@ use Livewire\Component;
 /**
  * SystemHealthDashboard Component
  * 
- * RAINBO Command Central's system health monitoring dashboard.
+ * RAIOPS Command Central's system health monitoring dashboard.
  * Shows RDS health, sync status, and key metrics at a glance.
  */
 class SystemHealthDashboard extends Component

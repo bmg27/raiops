@@ -2,7 +2,7 @@
 
 ## Overview
 
-The RAINBO back office needs to copy certain data from the RAI production database (`linkrg_prod_test`). This includes:
+The RAIOPS back office needs to copy certain data from the RAI production database (`linkrg_prod_test`). This includes:
 
 1. **Permissions** - All permissions (filtered by `super_admin_only` where applicable)
 2. **Roles** - Global roles (especially Super Admin)
@@ -81,7 +81,7 @@ php artisan db:seed --class=CopySuperAdminUsersSeeder
 
 ### "Permission denied" errors
 - Check database user has SELECT permissions on RAI database
-- Check database user has INSERT/UPDATE permissions on RAINBO database
+- Check database user has INSERT/UPDATE permissions on RAIOPS database
 
 ### Users not copying
 - Verify users have `is_super_admin = 1` in RAI database

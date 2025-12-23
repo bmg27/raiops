@@ -16,7 +16,7 @@ class SyncUserRouting extends Command
      *
      * @var string
      */
-    protected $signature = 'rainbo:sync-user-routing
+    protected $signature = 'raiops:sync-user-routing
                             {--truncate : Truncate the cache table before syncing}';
 
     /**
@@ -128,7 +128,7 @@ class SyncUserRouting extends Command
 
             // Log the sync
             AuditLog::log('command_sync', 'UserEmailRoutingCache', null, null, [
-                'command' => 'rainbo:sync-user-routing',
+                'command' => 'raiops:sync-user-routing',
                 'entries_synced' => $synced,
                 'errors' => $errors,
                 'source_rds' => $masterRds->name,
@@ -139,7 +139,7 @@ class SyncUserRouting extends Command
             $this->info("  ✓ Synced: {$synced}");
             if ($skippedNoTenant > 0) {
                 $this->warn("  ○ Skipped (no tenant_master): {$skippedNoTenant}");
-                $this->line("    → Run 'php artisan rainbo:sync-tenant-summaries' first");
+                $this->line("    → Run 'php artisan raiops:sync-tenant-summaries' first");
             }
             if ($errors > $skippedNoTenant) {
                 $this->warn("  ✗ Errors: " . ($errors - $skippedNoTenant));

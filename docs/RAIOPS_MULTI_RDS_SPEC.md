@@ -1,4 +1,4 @@
-# RAINBO Multi-RDS Architecture Specification
+# RAIOPS Multi-RDS Architecture Specification
 
 **Version:** 1.0  
 **Date:** December 19, 2025  
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-RAINBO (RAI Back Office) is evolving from a single-database admin tool to a **Multi-RDS Command Central** capable of managing tenants, users, and operations across multiple RDS instances. This document captures all architectural decisions and provides a detailed implementation roadmap.
+RAIOPS (RAI Operations) is evolving from a single-database admin tool to a **Multi-RDS Command Central** capable of managing tenants, users, and operations across multiple RDS instances. This document captures all architectural decisions and provides a detailed implementation roadmap.
 
 ---
 
@@ -35,8 +35,8 @@ RAINBO (RAI Back Office) is evolving from a single-database admin tool to a **Mu
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                           RAINBO                                     │
-│                    (rainbo.example.com)                              │
+│                           RAIOPS                                     │
+│                    (raiops.example.com)                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │
 │  │   Admin     │  │   Tenant    │  │    RDS      │                  │
 │  │   Auth      │  │   Manager   │  │   Manager   │                  │
@@ -45,7 +45,7 @@ RAINBO (RAI Back Office) is evolving from a single-database admin tool to a **Mu
 │         └────────────────┼────────────────┘                          │
 │                          │                                           │
 │                ┌─────────▼─────────┐                                │
-│                │  RAINBO Database  │                                │
+│                │  RAIOPS Database  │                                │
 │                │  (Source of Truth)│                                │
 │                └─────────┬─────────┘                                │
 └──────────────────────────┼──────────────────────────────────────────┘
@@ -70,9 +70,9 @@ RAINBO (RAI Back Office) is evolving from a single-database admin tool to a **Mu
 
 ### Key Principles
 
-1. **RAINBO is the Source of Truth** for platform-level data (RDS configs, tenant registry, admin users, billing)
+1. **RAIOPS is the Source of Truth** for platform-level data (RDS configs, tenant registry, admin users, billing)
 2. **RAI instances are the Source of Truth** for tenant operational data (users, locations, tips, reports)
-3. **Hybrid Data Strategy** - Cache summaries in RAINBO, query live for details
+3. **Hybrid Data Strategy** - Cache summaries in RAIOPS, query live for details
 4. **Secure Impersonation** - JWT-based cross-app authentication with granular permissions
 
 ---
@@ -83,10 +83,10 @@ RAINBO (RAI Back Office) is evolving from a single-database admin tool to a **Mu
 |-------|----------|-----------|
 | App Architecture | Separate Laravel app | Clean separation, independent deployment |
 | Authentication | Own users table, username/password | Simple for development, SSO/2FA later |
-| Database | Own `rainbo` database | Single source of truth for platform data |
+| Database | Own `raiops` database | Single source of truth for platform data |
 | Data Strategy | Hybrid (cached + live) | Balance between performance and accuracy |
 | Impersonation | JWT token, ghost users | Secure, auditable, cross-domain compatible |
-| Audit Logging | Both apps | RAI local + push to RAINBO central |
+| Audit Logging | Both apps | RAI local + push to RAIOPS central |
 | Permissions | Granular per-admin | Different admin roles need different access |
 | Ghost Users | Keep with flag, 90-day cleanup | Maintain audit trail associations |
 | UI for No-Permission | Hide elements | Cleaner UX, less confusion |
@@ -95,12 +95,12 @@ RAINBO (RAI Back Office) is evolving from a single-database admin tool to a **Mu
 
 ## Database Schema
 
-### RAINBO Database Tables
+### RAIOPS Database Tables
 
-#### `rainbo_users` (System Administrators)
+#### `raiops_users` (System Administrators)
 
 ```sql
-CREATE TABLE rainbo_users (
+CREATE TABLE raiops_users (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -211,10 +211,10 @@ CREATE TABLE subscription_plans (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 ```
 
-#### `rainbo_permissions`
+#### `raiops_permissions`
 
 ```sql
-CREATE TABLE rainbo_permissions (
+CREATE TABLE raiops_permissions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     display_name VARCHAR(255) NOT NULL,
@@ -225,7 +225,7 @@ CREATE TABLE rainbo_permissions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Seed data
-INSERT INTO rainbo_permissions (name, display_name, group_name) VALUES
+INSERT INTO raiops_permissions (name, display_name, group_name) VALUES
 ('tenant.view', 'View Tenants', 'Tenants'),
 ('tenant.create', 'Create Tenants', 'Tenants'),
 ('tenant.edit', 'Edit Tenants', 'Tenants'),
@@ -243,10 +243,10 @@ INSERT INTO rainbo_permissions (name, display_name, group_name) VALUES
 ('reports.export', 'Export Reports', 'Reports');
 ```
 
-#### `rainbo_role_permissions`
+#### `raiops_role_permissions`
 
 ```sql
-CREATE TABLE rainbo_role_permissions (
+CREATE TABLE raiops_role_permissions (
     role VARCHAR(50) NOT NULL,
     permission_id BIGINT UNSIGNED NOT NULL,
     created_at TIMESTAMP NULL,
@@ -256,22 +256,22 @@ CREATE TABLE rainbo_role_permissions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Seed: System Admin gets all permissions
-INSERT INTO rainbo_role_permissions (role, permission_id, created_at)
-SELECT 'system_admin', id, NOW() FROM rainbo_permissions;
+INSERT INTO raiops_role_permissions (role, permission_id, created_at)
+SELECT 'system_admin', id, NOW() FROM raiops_permissions;
 
 -- Seed: Support Admin
-INSERT INTO rainbo_role_permissions (role, permission_id, created_at)
-SELECT 'support_admin', id, NOW() FROM rainbo_permissions 
+INSERT INTO raiops_role_permissions (role, permission_id, created_at)
+SELECT 'support_admin', id, NOW() FROM raiops_permissions 
 WHERE name IN ('tenant.view', 'tenant.edit', 'tenant.impersonate', 'user.view', 'user.edit', 'user.password-reset', 'audit.view', 'rds.view');
 
 -- Seed: Billing Admin
-INSERT INTO rainbo_role_permissions (role, permission_id, created_at)
-SELECT 'billing_admin', id, NOW() FROM rainbo_permissions 
+INSERT INTO raiops_role_permissions (role, permission_id, created_at)
+SELECT 'billing_admin', id, NOW() FROM raiops_permissions 
 WHERE name IN ('tenant.view', 'billing.view', 'billing.edit', 'reports.view', 'reports.export');
 
 -- Seed: Read Only
-INSERT INTO rainbo_role_permissions (role, permission_id, created_at)
-SELECT 'read_only', id, NOW() FROM rainbo_permissions 
+INSERT INTO raiops_role_permissions (role, permission_id, created_at)
+SELECT 'read_only', id, NOW() FROM raiops_permissions 
 WHERE name IN ('tenant.view', 'user.view', 'billing.view', 'rds.view', 'audit.view', 'reports.view');
 ```
 
@@ -280,7 +280,7 @@ WHERE name IN ('tenant.view', 'user.view', 'billing.view', 'rds.view', 'audit.vi
 ```sql
 CREATE TABLE audit_logs (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    rainbo_user_id BIGINT UNSIGNED NULL,
+    raiops_user_id BIGINT UNSIGNED NULL,
     action VARCHAR(100) NOT NULL,  -- 'created', 'updated', 'deleted', 'impersonated', etc.
     model_type VARCHAR(255) NULL,  -- 'TenantMaster', 'RdsInstance', etc.
     model_id BIGINT UNSIGNED NULL,
@@ -290,10 +290,10 @@ CREATE TABLE audit_logs (
     new_values JSON NULL,
     ip_address VARCHAR(45) NULL,
     user_agent TEXT NULL,
-    source ENUM('rainbo', 'rai_push') DEFAULT 'rainbo',
+    source ENUM('raiops', 'rai_push') DEFAULT 'raiops',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
-    INDEX idx_user (rainbo_user_id),
+    INDEX idx_user (raiops_user_id),
     INDEX idx_action (action),
     INDEX idx_model (model_type, model_id),
     INDEX idx_tenant (tenant_master_id),
@@ -327,14 +327,14 @@ CREATE TABLE user_email_routing_cache (
 
 ## Authentication & Authorization
 
-### RAINBO Admin Authentication
+### RAIOPS Admin Authentication
 
-RAINBO uses its own `rainbo_users` table, completely separate from RAI users.
+RAIOPS uses its own `users` table, completely separate from RAI users.
 
 **Login Flow:**
-1. Admin visits `rainbo.example.com/login`
+1. Admin visits `raiops.example.com/login`
 2. Enters email/password
-3. Laravel authenticates against `rainbo_users` table
+3. Laravel authenticates against `raiops_users` table
 4. Session created with admin's role and permissions
 
 **Guard Configuration** (`config/auth.php`):
@@ -343,14 +343,14 @@ RAINBO uses its own `rainbo_users` table, completely separate from RAI users.
 'guards' => [
     'web' => [
         'driver' => 'session',
-        'provider' => 'rainbo_users',
+        'provider' => 'raiops_users',
     ],
 ],
 
 'providers' => [
-    'rainbo_users' => [
+    'raiops_users' => [
         'driver' => 'eloquent',
-        'model' => App\Models\RainboUser::class,
+        'model' => App\Models\RaiOpsUser::class,
     ],
 ],
 ```
@@ -367,22 +367,22 @@ RAINBO uses its own `rainbo_users` table, completely separate from RAI users.
 ### Permission Checking
 
 ```php
-// In RainboUser model
+// In RaiOpsUser model
 public function hasPermission(string $permission): bool
 {
-    return DB::table('rainbo_role_permissions')
-        ->join('rainbo_permissions', 'rainbo_permissions.id', '=', 'rainbo_role_permissions.permission_id')
-        ->where('rainbo_role_permissions.role', $this->role)
-        ->where('rainbo_permissions.name', $permission)
+    return DB::table('raiops_role_permissions')
+        ->join('raiops_permissions', 'raiops_permissions.id', '=', 'raiops_role_permissions.permission_id')
+        ->where('raiops_role_permissions.role', $this->role)
+        ->where('raiops_permissions.name', $permission)
         ->exists();
 }
 
 public function getPermissions(): array
 {
-    return DB::table('rainbo_role_permissions')
-        ->join('rainbo_permissions', 'rainbo_permissions.id', '=', 'rainbo_role_permissions.permission_id')
-        ->where('rainbo_role_permissions.role', $this->role)
-        ->pluck('rainbo_permissions.name')
+    return DB::table('raiops_role_permissions')
+        ->join('raiops_permissions', 'raiops_permissions.id', '=', 'raiops_role_permissions.permission_id')
+        ->where('raiops_role_permissions.role', $this->role)
+        ->pluck('raiops_permissions.name')
         ->toArray();
 }
 ```
@@ -393,20 +393,20 @@ public function getPermissions(): array
 
 ### Overview
 
-When a RAINBO admin needs to access a tenant's RAI instance:
+When a RAIOPS admin needs to access a tenant's RAI instance:
 
-1. **RAINBO generates signed JWT** with admin ID, tenant ID, RDS ID, permissions
+1. **RAIOPS generates signed JWT** with admin ID, tenant ID, RDS ID, permissions
 2. **Redirects to RAI** impersonation endpoint with token
 3. **RAI validates token**, creates/retrieves ghost user, establishes session
-4. **Admin operates in RAI** with their RAINBO permissions enforced
-5. **Return to RAINBO** via button in RAI UI
+4. **Admin operates in RAI** with their RAIOPS permissions enforced
+5. **Return to RAIOPS** via button in RAI UI
 
 ### JWT Token Structure
 
 ```json
 {
-  "rainbo_admin_id": 1,
-  "rainbo_admin_email": "admin@example.com",
+  "raiops_admin_id": 1,
+  "raiops_admin_email": "admin@example.com",
   "tenant_master_id": 42,
   "remote_tenant_id": 5,
   "rds_instance_id": 2,
@@ -415,26 +415,26 @@ When a RAINBO admin needs to access a tenant's RAI instance:
     "tenant.edit",
     "user.view"
   ],
-  "return_url": "https://rainbo.example.com/tenants/42",
+  "return_url": "https://raiops.example.com/tenants/42",
   "iat": 1734567890,
   "exp": 1734568190
 }
 ```
 
-### RAINBO Side (Token Generation)
+### RAIOPS Side (Token Generation)
 
 ```php
 // App\Services\ImpersonationTokenService
 
 class ImpersonationTokenService
 {
-    public function generateToken(RainboUser $admin, TenantMaster $tenant): string
+    public function generateToken(RaiOpsUser $admin, TenantMaster $tenant): string
     {
         $rds = $tenant->rdsInstance;
         
         $payload = [
-            'rainbo_admin_id' => $admin->id,
-            'rainbo_admin_email' => $admin->email,
+            'raiops_admin_id' => $admin->id,
+            'raiops_admin_email' => $admin->email,
             'tenant_master_id' => $tenant->id,
             'remote_tenant_id' => $tenant->remote_tenant_id,
             'rds_instance_id' => $rds->id,
@@ -444,15 +444,15 @@ class ImpersonationTokenService
             'exp' => now()->addMinutes(5)->timestamp,
         ];
         
-        return JWT::encode($payload, config('rainbo.impersonation_secret'), 'HS256');
+        return JWT::encode($payload, config('raiops.impersonation_secret'), 'HS256');
     }
     
-    public function getImpersonationUrl(RainboUser $admin, TenantMaster $tenant): string
+    public function getImpersonationUrl(RaiOpsUser $admin, TenantMaster $tenant): string
     {
         $token = $this->generateToken($admin, $tenant);
         $rds = $tenant->rdsInstance;
         
-        return $rds->app_url . '/rainbo-impersonate?token=' . $token;
+        return $rds->app_url . '/raiops-impersonate?token=' . $token;
     }
 }
 ```
@@ -461,13 +461,13 @@ class ImpersonationTokenService
 
 ```php
 // routes/web.php (in RAI)
-Route::get('/rainbo-impersonate', [RainboImpersonationController::class, 'handle'])
+Route::get('/raiops-impersonate', [RaiOpsImpersonationController::class, 'handle'])
     ->middleware('throttle:10,1')
-    ->name('rainbo.impersonate');
+    ->name('raiops.impersonate');
 
-// App\Http\Controllers\RainboImpersonationController (in RAI)
+// App\Http\Controllers\RaiOpsImpersonationController (in RAI)
 
-class RainboImpersonationController extends Controller
+class RaiOpsImpersonationController extends Controller
 {
     public function handle(Request $request)
     {
@@ -480,12 +480,12 @@ class RainboImpersonationController extends Controller
         try {
             $payload = JWT::decode(
                 $token, 
-                new Key(config('rainbo.impersonation_secret'), 'HS256')
+                new Key(config('raiops.impersonation_secret'), 'HS256')
             );
             
             // Validate RDS instance matches this RAI deployment
             if ($payload->rds_instance_id !== (int) config('app.rds_instance_id')) {
-                Log::warning('RAINBO impersonation: wrong RDS', [
+                Log::warning('RAIOPS impersonation: wrong RDS', [
                     'expected' => config('app.rds_instance_id'),
                     'received' => $payload->rds_instance_id,
                 ]);
@@ -500,11 +500,11 @@ class RainboImpersonationController extends Controller
             
             // Set session context
             session([
-                'is_rainbo_session' => true,
-                'rainbo_admin_id' => $payload->rainbo_admin_id,
-                'rainbo_admin_email' => $payload->rainbo_admin_email,
-                'rainbo_permissions' => $payload->permissions,
-                'rainbo_return_url' => $payload->return_url,
+                'is_raiops_session' => true,
+                'raiops_admin_id' => $payload->raiops_admin_id,
+                'raiops_admin_email' => $payload->raiops_admin_email,
+                'raiops_permissions' => $payload->permissions,
+                'raiops_return_url' => $payload->return_url,
                 'impersonated_tenant_id' => $payload->remote_tenant_id,
                 'selected_tenant_id' => $payload->remote_tenant_id,
             ]);
@@ -515,8 +515,8 @@ class RainboImpersonationController extends Controller
             }
             
             // Log the impersonation
-            Log::info('RAINBO impersonation successful', [
-                'rainbo_admin_id' => $payload->rainbo_admin_id,
+            Log::info('RAIOPS impersonation successful', [
+                'raiops_admin_id' => $payload->raiops_admin_id,
                 'tenant_id' => $payload->remote_tenant_id,
                 'ghost_user_id' => $ghostUser->id,
             ]);
@@ -526,7 +526,7 @@ class RainboImpersonationController extends Controller
         } catch (ExpiredException $e) {
             abort(403, 'Token expired');
         } catch (\Exception $e) {
-            Log::error('RAINBO impersonation failed', [
+            Log::error('RAIOPS impersonation failed', [
                 'error' => $e->getMessage(),
             ]);
             abort(403, 'Invalid token');
@@ -535,12 +535,12 @@ class RainboImpersonationController extends Controller
     
     protected function findOrCreateGhostAdmin(object $payload): User
     {
-        $email = "rainbo-admin-{$payload->rainbo_admin_id}@system.internal";
+        $email = "raiops-admin-{$payload->raiops_admin_id}@system.internal";
         
         return User::firstOrCreate(
             ['email' => $email],
             [
-                'name' => "RAINBO Admin #{$payload->rainbo_admin_id}",
+                'name' => "RAIOPS Admin #{$payload->raiops_admin_id}",
                 'password' => Hash::make(Str::random(64)),
                 'is_super_admin' => true,
                 'is_ghost_admin' => true,
@@ -555,30 +555,30 @@ class RainboImpersonationController extends Controller
 ### RAI Permission Enforcement
 
 ```php
-// App\Services\RainboPermissionService (in RAI)
+// App\Services\RaiOpsPermissionService (in RAI)
 
-class RainboPermissionService
+class RaiOpsPermissionService
 {
-    public function isRainboSession(): bool
+    public function isRaiOpsSession(): bool
     {
-        return session('is_rainbo_session', false);
+        return session('is_raiops_session', false);
     }
     
     public function canDo(string $permission): bool
     {
-        // If not a RAINBO session, allow (normal RAI permissions apply)
-        if (!$this->isRainboSession()) {
+        // If not a RAIOPS session, allow (normal RAI permissions apply)
+        if (!$this->isRaiOpsSession()) {
             return true;
         }
         
-        $permissions = session('rainbo_permissions', []);
+        $permissions = session('raiops_permissions', []);
         return in_array($permission, $permissions);
     }
     
     public function denyUnlessAllowed(string $permission): void
     {
         if (!$this->canDo($permission)) {
-            abort(403, 'RAINBO permission denied: ' . $permission);
+            abort(403, 'RAIOPS permission denied: ' . $permission);
         }
     }
 }
@@ -591,7 +591,7 @@ class RainboPermissionService
 
 class CleanupGhostAdmins extends Command
 {
-    protected $signature = 'rainbo:cleanup-ghost-admins {--days=90}';
+    protected $signature = 'raiops:cleanup-ghost-admins {--days=90}';
     
     public function handle()
     {
@@ -633,14 +633,14 @@ class CleanupGhostAdmins extends Command
 
 ```bash
 # Scheduled (cron)
-*/15 * * * * php artisan rainbo:sync-tenant-summaries
-*/15 * * * * php artisan rainbo:sync-user-routing
-*/5  * * * * php artisan rainbo:health-check-rds
+*/15 * * * * php artisan raiops:sync-tenant-summaries
+*/15 * * * * php artisan raiops:sync-user-routing
+*/5  * * * * php artisan raiops:health-check-rds
 
 # Manual
-php artisan rainbo:refresh-tenant {tenant_master_id}
-php artisan rainbo:refresh-all-tenants
-php artisan rainbo:sync-from-rds {rds_instance_id}
+php artisan raiops:refresh-tenant {tenant_master_id}
+php artisan raiops:refresh-all-tenants
+php artisan raiops:sync-from-rds {rds_instance_id}
 ```
 
 ### Sync Service
@@ -727,7 +727,7 @@ class TenantSyncService
 
 ### Phase 1: Foundation (Multi-RDS Awareness)
 
-**Goal:** RAINBO can connect to and manage multiple RDS instances
+**Goal:** RAIOPS can connect to and manage multiple RDS instances
 
 **Tasks:**
 
@@ -743,7 +743,7 @@ class TenantSyncService
    - [ ] `AuditLog` model
 
 3. **Services**
-   - [ ] `RdsConnectionService` for RAINBO
+   - [ ] `RdsConnectionService` for RAIOPS
    - [ ] `AuditService` for logging actions
 
 4. **UI Components**
@@ -765,7 +765,7 @@ class TenantSyncService
 
 ### Phase 2: Cross-RDS Operations
 
-**Goal:** RAINBO can query and manage data across all RDS instances
+**Goal:** RAIOPS can query and manage data across all RDS instances
 
 **Tasks:**
 
@@ -780,8 +780,8 @@ class TenantSyncService
    - [ ] Edit routing entries
 
 3. **Sync Jobs**
-   - [ ] `rainbo:sync-tenant-summaries` command
-   - [ ] `rainbo:sync-user-routing` command
+   - [ ] `raiops:sync-tenant-summaries` command
+   - [ ] `raiops:sync-user-routing` command
    - [ ] Schedule sync jobs
 
 4. **Cross-RDS Commands**
@@ -797,24 +797,24 @@ class TenantSyncService
 
 ### Phase 3: Impersonation Flow
 
-**Goal:** RAINBO admins can securely access RAI tenant instances
+**Goal:** RAIOPS admins can securely access RAI tenant instances
 
 **Tasks:**
 
-1. **RAINBO Side**
+1. **RAIOPS Side**
    - [ ] `ImpersonationTokenService`
    - [ ] "Manage in RAI" button on tenant detail
    - [ ] Audit logging for impersonation
 
 2. **RAI Side**
-   - [ ] `/rainbo-impersonate` endpoint
-   - [ ] `RainboImpersonationController`
+   - [ ] `/raiops-impersonate` endpoint
+   - [ ] `RaiOpsImpersonationController`
    - [ ] Ghost user creation
    - [ ] Session setup with permissions
 
 3. **RAI UI Changes**
-   - [ ] RAINBO session indicator bar
-   - [ ] "Return to RAINBO" button
+   - [ ] RAIOPS session indicator bar
+   - [ ] "Return to RAIOPS" button
    - [ ] Permission-based UI hiding
 
 4. **Shared Configuration**
@@ -822,9 +822,9 @@ class TenantSyncService
    - [ ] RDS instance ID in RAI config
 
 **Deliverables:**
-- Seamless jump from RAINBO to RAI tenant
-- Visual indicator of RAINBO session in RAI
-- Return path back to RAINBO
+- Seamless jump from RAIOPS to RAI tenant
+- Visual indicator of RAIOPS session in RAI
+- Return path back to RAIOPS
 
 ---
 
@@ -834,9 +834,9 @@ class TenantSyncService
 
 **Tasks:**
 
-1. **RAINBO Permissions**
-   - [ ] `rainbo_permissions` table and seeder
-   - [ ] `rainbo_role_permissions` table and seeder
+1. **RAIOPS Permissions**
+   - [ ] `raiops_permissions` table and seeder
+   - [ ] `raiops_role_permissions` table and seeder
    - [ ] Permission checking middleware
    - [ ] UI permission checks
 
@@ -845,9 +845,9 @@ class TenantSyncService
    - [ ] Manual audit log entries
    - [ ] Audit log viewer UI
 
-3. **RAI → RAINBO Event Push**
-   - [ ] Webhook endpoint in RAINBO
-   - [ ] Event dispatch from RAI on RAINBO session actions
+3. **RAI → RAIOPS Event Push**
+   - [ ] Webhook endpoint in RAIOPS
+   - [ ] Event dispatch from RAI on RAIOPS session actions
    - [ ] Retry logic for failed pushes
 
 4. **Ghost User Cleanup**
@@ -856,7 +856,7 @@ class TenantSyncService
    - [ ] Schedule cleanup job
 
 **Deliverables:**
-- Role-based access in RAINBO
+- Role-based access in RAIOPS
 - Full audit trail of all actions
 - Ghost user lifecycle management
 
@@ -900,7 +900,7 @@ class TenantSyncService
 
 ## API Endpoints
 
-### Internal API (RAINBO)
+### Internal API (RAIOPS)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -916,7 +916,7 @@ class TenantSyncService
 | GET | `/api/user-routing` | Search user routing |
 | GET | `/api/audit-logs` | List audit logs |
 
-### Webhook Endpoint (RAINBO receives from RAI)
+### Webhook Endpoint (RAIOPS receives from RAI)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -926,7 +926,7 @@ class TenantSyncService
 
 ## Services & Classes
 
-### RAINBO Services
+### RAIOPS Services
 
 | Service | Purpose |
 |---------|---------|
@@ -941,45 +941,45 @@ class TenantSyncService
 
 | Service | Purpose |
 |---------|---------|
-| `RainboPermissionService` | Check RAINBO session permissions |
-| `RainboAuditPushService` | Push audit events to RAINBO |
+| `RaiOpsPermissionService` | Check RAIOPS session permissions |
+| `RaiOpsAuditPushService` | Push audit events to RAIOPS |
 
 ---
 
 ## Configuration Requirements
 
-### RAINBO `.env`
+### RAIOPS `.env`
 
 ```env
 # Application
-APP_NAME=RAINBO
-APP_URL=https://rainbo.example.com
+APP_NAME=RAIOPS
+APP_URL=https://raiops.example.com
 
-# Database (RAINBO's own database)
+# Database (RAIOPS's own database)
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=rainbo
-DB_USERNAME=rainbo_user
+DB_DATABASE=raiops
+DB_USERNAME=raiops_user
 DB_PASSWORD=secure_password
 
 # Impersonation
-RAINBO_IMPERSONATION_SECRET=your-64-character-secret-key-shared-with-all-rai-instances
+RAIOPS_IMPERSONATION_SECRET=your-64-character-secret-key-shared-with-all-rai-instances
 
 # Webhook (for receiving audit events from RAI)
-RAINBO_WEBHOOK_SECRET=another-secret-for-webhook-validation
+RAIOPS_WEBHOOK_SECRET=another-secret-for-webhook-validation
 ```
 
 ### RAI `.env` (Additions)
 
 ```env
-# RAINBO Integration
-RAINBO_IMPERSONATION_SECRET=your-64-character-secret-key-shared-with-rainbo
-RAINBO_APP_URL=https://rainbo.example.com
-RAINBO_WEBHOOK_URL=https://rainbo.example.com/api/webhooks/rai-audit
-RAINBO_WEBHOOK_SECRET=another-secret-for-webhook-validation
+# RAIOPS Integration
+RAIOPS_IMPERSONATION_SECRET=your-64-character-secret-key-shared-with-raiops
+RAIOPS_APP_URL=https://raiops.example.com
+RAIOPS_WEBHOOK_URL=https://raiops.example.com/api/webhooks/rai-audit
+RAIOPS_WEBHOOK_SECRET=another-secret-for-webhook-validation
 
-# This RAI instance's RDS ID (must match rds_instances.id in RAINBO)
+# This RAI instance's RDS ID (must match rds_instances.id in RAIOPS)
 APP_RDS_INSTANCE_ID=1
 ```
 
@@ -1064,9 +1064,9 @@ APP_RDS_INSTANCE_ID=1
 
 ---
 
-## Appendix: Migration from Current RAINBO
+## Appendix: Migration from Current RAIOPS
 
-The existing RAINBO project has:
+The existing RAIOPS project has:
 - Basic tenant management (single RDS)
 - Permission management
 - User management

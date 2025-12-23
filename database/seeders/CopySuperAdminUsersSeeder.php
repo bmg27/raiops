@@ -14,8 +14,8 @@ class CopySuperAdminUsersSeeder extends Seeder
      * Run the database seeds.
      * 
      * This seeder copies all users with is_super_admin = true from the RAI database
-     * to the RAINBO database. It connects to the RAI database, retrieves super admin
-     * users, and creates them in the RAINBO database.
+     * to the RAIOPS database. It connects to the RAI database, retrieves super admin
+     * users, and creates them in the RAIOPS database.
      */
     public function run(): void
     {
@@ -75,7 +75,7 @@ class CopySuperAdminUsersSeeder extends Seeder
                     continue;
                 }
 
-                // Create user in RAINBO database
+                // Create user in RAIOPS database
                 $userData = [
                     'name' => $raiUser->name,
                     'email' => $raiUser->email,
@@ -88,9 +88,9 @@ class CopySuperAdminUsersSeeder extends Seeder
                     'updated_at' => $raiUser->updated_at ?? now(),
                 ];
 
-                // Only add status if the column exists (RAINBO users table may not have it)
+                // Only add status if the column exists (RAIOPS users table may not have it)
                 if (isset($raiUser->status)) {
-                    // Check if status column exists in RAINBO users table
+                    // Check if status column exists in RAIOPS users table
                     $hasStatusColumn = \Schema::hasColumn('users', 'status');
                     if ($hasStatusColumn) {
                         $userData['status'] = $raiUser->status;

@@ -8,7 +8,7 @@
             <p class="text-muted mb-0">Manage tenant subscriptions, billing cycles, and payments</p>
         </div>
         <div>
-            @canRainbo('billing.edit')
+            @canRaiOps('billing.edit')
                 <button 
                     type="button" 
                     class="btn btn-primary btn-sm"
@@ -16,7 +16,7 @@
                 >
                     <i class="bi bi-plus-lg me-1"></i> Add Billing Record
                 </button>
-            @endcanRainbo
+            @endcanRaiOps
         </div>
     </div>
 
@@ -201,7 +201,7 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    @canRainbo('billing.edit')
+                                    @canRaiOps('billing.edit')
                                         <button
                                             wire:click="openModal({{ $billing->id }})"
                                             class="btn btn-sm btn-outline-primary"
@@ -209,7 +209,7 @@
                                         >
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                    @endcanRainbo
+                                    @endcanRaiOps
                                 </td>
                             </tr>
                         @empty

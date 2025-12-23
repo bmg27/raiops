@@ -23,13 +23,13 @@ class CheckPermission
             abort(403, 'Unauthorized.');
         }
 
-        // System Admins have all permissions in RAINBO
+        // System Admins have all permissions in RAIOPS
         if ($user->isSystemAdmin()) {
             return $next($request);
         }
 
-        // Check RAINBO-specific permissions first
-        if ($user->hasRainboPermission($permission)) {
+        // Check RAIOPS-specific permissions first
+        if ($user->hasRaiOpsPermission($permission)) {
             return $next($request);
         }
 

@@ -12,7 +12,7 @@ use Livewire\WithPagination;
 /**
  * BillingManagement Component
  * 
- * RAINBO Command Central's billing management interface.
+ * RAIOPS Command Central's billing management interface.
  * Manage tenant billing, subscriptions, and payment tracking.
  */
 class BillingManagement extends Component

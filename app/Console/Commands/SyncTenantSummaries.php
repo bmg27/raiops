@@ -15,7 +15,7 @@ class SyncTenantSummaries extends Command
      *
      * @var string
      */
-    protected $signature = 'rainbo:sync-tenant-summaries
+    protected $signature = 'raiops:sync-tenant-summaries
                             {--rds= : Specific RDS instance ID to sync from}
                             {--force : Force sync even if cache is fresh}';
 
@@ -132,7 +132,7 @@ class SyncTenantSummaries extends Command
 
         // Log the sync
         AuditLog::log('command_sync', 'TenantMaster', null, null, [
-            'command' => 'rainbo:sync-tenant-summaries',
+                'command' => 'raiops:sync-tenant-summaries',
             'tenants_synced' => $totalSynced,
             'tenants_skipped' => $totalSkipped,
             'errors' => $totalErrors,

@@ -3,28 +3,28 @@
 namespace App\Services;
 
 /**
- * RAINBO Menu Service
+ * RAIOPS Menu Service
  * 
- * Provides the navigation menu structure for RAINBO Command Central.
- * RAINBO uses its own dedicated menu system, separate from RAI.
+ * Provides the navigation menu structure for RAIOPS Command Central.
+ * RAIOPS uses its own dedicated menu system, separate from RAI.
  */
 class MenuServiceDatabase
 {
     /**
-     * Get RAINBO admin menu items
+     * Get RAIOPS admin menu items
      * 
-     * Returns the main navigation items for the RAINBO admin panel.
+     * Returns the main navigation items for the RAIOPS admin panel.
      * This is a flat structure of top-level links - simple and focused.
      */
     public static function getSuperAdminMenuItems(): array
     {
-        return self::getRainboMenu();
+        return self::getRaiOpsMenu();
     }
 
     /**
-     * RAINBO Admin Menu - The main navigation for RAINBO Command Central
+     * RAIOPS Admin Menu - The main navigation for RAIOPS Command Central
      */
-    private static function getRainboMenu(): array
+    private static function getRaiOpsMenu(): array
     {
         return [
             [

@@ -6,7 +6,7 @@
             <i class="bi bi-hourglass-split text-muted" style="font-size: 4rem;"></i>
             <h4 class="mt-4">Coming in Phase 4</h4>
             <p class="text-muted mb-4">
-                The Audit Logs viewer will display all administrative actions across RAINBO,
+                The Audit Logs viewer will display all administrative actions across RAIOPS,
                 including tenant management, impersonation sessions, and configuration changes.
             </p>
             <div class="alert alert-info d-inline-block">

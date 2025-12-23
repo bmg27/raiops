@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  * RaiWebhookController
  * 
  * Receives webhook events from RAI instances.
- * Used to push audit events from RAI back to RAINBO for centralized logging.
+ * Used to push audit events from RAI back to RAIOPS for centralized logging.
  */
 class RaiWebhookController extends Controller
 {
@@ -30,7 +30,7 @@ class RaiWebhookController extends Controller
      *     "model_type": "User",
      *     "model_id": 123,
      *     "tenant_id": 5,
-     *     "rainbo_admin_id": 1,  // If from RAINBO session
+     *     "raiops_admin_id": 1,  // If from RAIOPS session
      *     "old_values": {...},
      *     "new_values": {...},
      *     "ip_address": "1.2.3.4",
@@ -57,7 +57,7 @@ class RaiWebhookController extends Controller
             'data.model_type' => 'nullable|string',
             'data.model_id' => 'nullable|integer',
             'data.tenant_id' => 'nullable|integer',
-            'data.rainbo_admin_id' => 'nullable|integer',
+            'data.raiops_admin_id' => 'nullable|integer',
             'data.old_values' => 'nullable|array',
             'data.new_values' => 'nullable|array',
             'data.ip_address' => 'nullable|string',
@@ -88,7 +88,7 @@ class RaiWebhookController extends Controller
 
             // Create audit log entry
             AuditLog::create([
-                'rainbo_user_id' => $data['rainbo_admin_id'] ?? null,
+                'raiops_user_id' => $data['raiops_admin_id'] ?? null,
                 'action' => $data['action'],
                 'model_type' => $data['model_type'] ?? null,
                 'model_id' => $data['model_id'] ?? null,
@@ -136,19 +136,19 @@ class RaiWebhookController extends Controller
         return response()->json([
             'status' => 'ok',
             'timestamp' => now()->toIso8601String(),
-            'app' => 'RAINBO',
+            'app' => 'RAIOPS',
         ]);
     }
 
     /**
      * Validate webhook signature
      * 
-     * RAI should send a signature in the X-Rainbo-Signature header:
+     * RAI should send a signature in the X-RaiOps-Signature header:
      * signature = HMAC-SHA256(request_body, webhook_secret)
      */
     protected function validateSignature(Request $request): bool
     {
-        $secret = config('rainbo.webhook_secret');
+        $secret = config('raiops.webhook_secret');
 
         // If no secret configured, skip validation (development mode)
         if (empty($secret)) {
@@ -156,7 +156,7 @@ class RaiWebhookController extends Controller
             return true;
         }
 
-        $signature = $request->header('X-Rainbo-Signature');
+        $signature = $request->header('X-RaiOps-Signature');
         
         if (empty($signature)) {
             return false;

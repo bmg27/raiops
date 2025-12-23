@@ -98,7 +98,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is a system admin (highest level in RAINBO)
+     * Check if user is a system admin (highest level in RAIOPS)
      */
     public function isSystemAdmin(): bool
     {
@@ -106,33 +106,33 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user has a specific RAINBO permission
+     * Check if user has a specific RAIOPS permission
      */
-    public function hasRainboPermission(string $permission): bool
+    public function hasRaiOpsPermission(string $permission): bool
     {
         // System admins have all permissions
         if ($this->isSystemAdmin()) {
             return true;
         }
 
-        return RainboPermission::roleHasPermission($this->role ?? 'read_only', $permission);
+        return RaiOpsPermission::roleHasPermission($this->role ?? 'read_only', $permission);
     }
 
     /**
      * Get all permissions for this user's role
      */
-    public function getRainboPermissions(): array
+    public function getRaiOpsPermissions(): array
     {
-        return RainboPermission::forRole($this->role ?? 'read_only');
+        return RaiOpsPermission::forRole($this->role ?? 'read_only');
     }
 
     /**
-     * Check if user can perform an action (alias for hasRainboPermission)
+     * Check if user can perform an action (alias for hasRaiOpsPermission)
      */
     public function can($ability, $arguments = []): bool
     {
-        // Check RAINBO permissions first
-        if ($this->hasRainboPermission($ability)) {
+        // Check RAIOPS permissions first
+        if ($this->hasRaiOpsPermission($ability)) {
             return true;
         }
 

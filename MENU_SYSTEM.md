@@ -2,7 +2,7 @@
 
 ## Overview
 
-RAINBO supports two menu systems:
+RAIOPS supports two menu systems:
 1. **Database-driven menus** (default, recommended)
 2. **JSON-based menus** (legacy fallback)
 

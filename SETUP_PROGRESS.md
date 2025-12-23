@@ -1,7 +1,7 @@
-# RAI Back Office (RAINBO) - Setup Progress
+# RAI Back Office (RAIOPS) - Setup Progress
 
 ## ✅ Completed
-1. ✅ Laravel 11 project created in `/var/www/html/rainbo` (downgraded from 12 to match RAI)
+1. ✅ Laravel 11 project created in `/var/www/html/raiops` (downgraded from 12 to match RAI)
 2. ✅ Jetstream installed with Livewire stack
 3. ✅ Spatie Laravel Permission installed and migrations published
 4. ✅ Super admin menu items extracted from RAI database (16 items found)
@@ -50,5 +50,5 @@
 - Match RAI styling exactly
 
 ## 📁 Files Created
-- `/var/www/html/rainbo/super_admin_menu_structure.json` - Menu structure data
+- `/var/www/html/raiops/super_admin_menu_structure.json` - Menu structure data
 

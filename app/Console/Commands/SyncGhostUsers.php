@@ -13,21 +13,21 @@ use Illuminate\Support\Str;
 /**
  * Sync Ghost Users Command
  * 
- * Creates a ghost user on each RDS instance for each RAINBO admin.
- * Ghost users enable RAINBO admins to impersonate into RAI without 
+ * Creates a ghost user on each RDS instance for each RAIOPS admin.
+ * Ghost users enable RAIOPS admins to impersonate into RAI without 
  * needing a real user account. They are identified by:
  * - is_ghost_admin = 1
- * - rainbo_admin_id = the RAINBO admin's ID
- * - email = rainbo-admin-{id}@system.internal
+ * - raiops_admin_id = the RAIOPS admin's ID
+ * - email = raiops-admin-{id}@system.internal
  */
 class SyncGhostUsers extends Command
 {
     protected $signature = 'sync:ghost-users 
-                            {--admin= : Sync only for a specific RAINBO admin ID}
+                            {--admin= : Sync only for a specific RAIOPS admin ID}
                             {--rds= : Sync only to a specific RDS instance ID}
                             {--dry-run : Show what would be done without making changes}';
 
-    protected $description = 'Sync ghost users to all RDS instances for RAINBO admin impersonation';
+    protected $description = 'Sync ghost users to all RDS instances for RAIOPS admin impersonation';
 
     public function handle(): int
     {
@@ -38,7 +38,7 @@ class SyncGhostUsers extends Command
             $this->warn('DRY RUN MODE - No changes will be made');
         }
         
-        // Get RAINBO admins to sync
+        // Get RAIOPS admins to sync
         $adminQuery = User::where('status', 'Active')
             ->where(function ($q) {
                 $q->where('is_super_admin', true)
@@ -53,11 +53,11 @@ class SyncGhostUsers extends Command
         $admins = $adminQuery->get();
         
         if ($admins->isEmpty()) {
-            $this->error('No RAINBO admins found to sync');
+            $this->error('No RAIOPS admins found to sync');
             return 1;
         }
         
-        $this->info("Found {$admins->count()} RAINBO admin(s) to sync");
+        $this->info("Found {$admins->count()} RAIOPS admin(s) to sync");
         
         // Get RDS instances to sync to
         $rdsQuery = RdsInstance::where('is_active', true);
@@ -137,8 +137,8 @@ class SyncGhostUsers extends Command
      */
     protected function syncGhostUser(User $admin, RdsInstance $rds, string $connectionName, bool $dryRun): bool
     {
-        $email = "rainbo-admin-{$admin->id}@system.internal";
-        $name = "RAINBO: {$admin->name}";
+        $email = "raiops-admin-{$admin->id}@system.internal";
+        $name = "RAIOPS: {$admin->name}";
         
         try {
             // Check if ghost user already exists
@@ -157,7 +157,7 @@ class SyncGhostUsers extends Command
                             'name' => $name,
                             'is_super_admin' => true,
                             'is_ghost_admin' => true,
-                            'rainbo_admin_id' => $admin->id,
+                            'raiops_admin_id' => $admin->id,
                             'location_access' => 'All',
                             'status' => 'Active',
                             'updated_at' => now(),
@@ -177,7 +177,7 @@ class SyncGhostUsers extends Command
                         'email_verified_at' => now(),
                         'is_super_admin' => true,
                         'is_ghost_admin' => true,
-                        'rainbo_admin_id' => $admin->id,
+                        'raiops_admin_id' => $admin->id,
                         'tenant_id' => null, // Will be set during impersonation
                         'location_access' => 'All',
                         'status' => 'Active',

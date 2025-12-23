@@ -22,7 +22,7 @@ return new class extends Migration
         }
 
         // Create permissions table
-        Schema::create('rainbo_permissions', function (Blueprint $table) {
+        Schema::create('raiops_permissions', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->string('display_name');
@@ -32,7 +32,7 @@ return new class extends Migration
         });
 
         // Create role_permissions pivot table
-        Schema::create('rainbo_role_permissions', function (Blueprint $table) {
+        Schema::create('raiops_role_permissions', function (Blueprint $table) {
             $table->string('role', 50);
             $table->unsignedBigInteger('permission_id');
             $table->timestamp('created_at')->nullable();
@@ -62,7 +62,7 @@ return new class extends Migration
 
         $now = now();
         foreach ($permissions as $permission) {
-            DB::table('rainbo_permissions')->insert([
+            DB::table('raiops_permissions')->insert([
                 'name' => $permission['name'],
                 'display_name' => $permission['display_name'],
                 'group_name' => $permission['group_name'],
@@ -72,11 +72,11 @@ return new class extends Migration
         }
 
         // Get all permission IDs for role assignments
-        $allPermissionIds = DB::table('rainbo_permissions')->pluck('id')->toArray();
+        $allPermissionIds = DB::table('raiops_permissions')->pluck('id')->toArray();
         
         // System Admin gets all permissions
         foreach ($allPermissionIds as $permId) {
-            DB::table('rainbo_role_permissions')->insert([
+            DB::table('raiops_role_permissions')->insert([
                 'role' => 'system_admin',
                 'permission_id' => $permId,
                 'created_at' => $now,
@@ -84,7 +84,7 @@ return new class extends Migration
         }
 
         // Support Admin permissions
-        $supportPermissions = DB::table('rainbo_permissions')
+        $supportPermissions = DB::table('raiops_permissions')
             ->whereIn('name', [
                 'tenant.view', 'tenant.edit', 'tenant.impersonate',
                 'user.view', 'user.edit', 'user.password-reset',
@@ -94,7 +94,7 @@ return new class extends Migration
             ->toArray();
 
         foreach ($supportPermissions as $permId) {
-            DB::table('rainbo_role_permissions')->insert([
+            DB::table('raiops_role_permissions')->insert([
                 'role' => 'support_admin',
                 'permission_id' => $permId,
                 'created_at' => $now,
@@ -102,7 +102,7 @@ return new class extends Migration
         }
 
         // Billing Admin permissions
-        $billingPermissions = DB::table('rainbo_permissions')
+        $billingPermissions = DB::table('raiops_permissions')
             ->whereIn('name', [
                 'tenant.view', 'billing.view', 'billing.edit',
                 'reports.view', 'reports.export'
@@ -111,7 +111,7 @@ return new class extends Migration
             ->toArray();
 
         foreach ($billingPermissions as $permId) {
-            DB::table('rainbo_role_permissions')->insert([
+            DB::table('raiops_role_permissions')->insert([
                 'role' => 'billing_admin',
                 'permission_id' => $permId,
                 'created_at' => $now,
@@ -119,7 +119,7 @@ return new class extends Migration
         }
 
         // Read Only permissions
-        $readOnlyPermissions = DB::table('rainbo_permissions')
+        $readOnlyPermissions = DB::table('raiops_permissions')
             ->whereIn('name', [
                 'tenant.view', 'user.view', 'billing.view',
                 'rds.view', 'audit.view', 'reports.view'
@@ -128,7 +128,7 @@ return new class extends Migration
             ->toArray();
 
         foreach ($readOnlyPermissions as $permId) {
-            DB::table('rainbo_role_permissions')->insert([
+            DB::table('raiops_role_permissions')->insert([
                 'role' => 'read_only',
                 'permission_id' => $permId,
                 'created_at' => $now,
@@ -141,8 +141,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rainbo_role_permissions');
-        Schema::dropIfExists('rainbo_permissions');
+        Schema::dropIfExists('raiops_role_permissions');
+        Schema::dropIfExists('raiops_permissions');
         
         if (Schema::hasColumn('users', 'role')) {
             Schema::table('users', function (Blueprint $table) {

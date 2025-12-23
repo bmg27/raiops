@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Schema;
 class CopyMenuItemsSeeder extends Seeder
 {
     /**
-     * Copy menu and menu items data from RAI database to RAINBO database
+     * Copy menu and menu items data from RAI database to RAIOPS database
      */
     public function run(): void
     {
-        $this->command->info('🔄 Starting menu items copy from RAI to RAINBO...');
+        $this->command->info('🔄 Starting menu items copy from RAI to RAIOPS...');
 
         // Ensure RAI connection is configured
         $raiDbHost = env('RAI_DB_HOST');
@@ -65,7 +65,7 @@ class CopyMenuItemsSeeder extends Seeder
     }
 
     /**
-     * Copy all menus from RAI to RAINBO
+     * Copy all menus from RAI to RAIOPS
      */
     private function copyMenus(): void
     {
@@ -120,7 +120,7 @@ class CopyMenuItemsSeeder extends Seeder
     }
 
     /**
-     * Copy all menu items from RAI to RAINBO
+     * Copy all menu items from RAI to RAIOPS
      */
     private function copyMenuItems(): void
     {
@@ -200,7 +200,7 @@ class CopyMenuItemsSeeder extends Seeder
     }
 
     /**
-     * Copy tenant menu item relationships from RAI to RAINBO
+     * Copy tenant menu item relationships from RAI to RAIOPS
      */
     private function copyTenantMenuItems(): void
     {
@@ -213,9 +213,9 @@ class CopyMenuItemsSeeder extends Seeder
                 return;
             }
 
-            // Check if table exists in RAINBO
+            // Check if table exists in RAIOPS
             if (!Schema::hasTable('tenant_menu_items')) {
-                $this->command->warn('   tenant_menu_items table does not exist in RAINBO database');
+                $this->command->warn('   tenant_menu_items table does not exist in RAIOPS database');
                 $this->command->warn('   Creating table structure...');
                 
                 // Create the pivot table
