@@ -32,9 +32,9 @@ class UserEmailRoutingCache extends Model
     }
 
     /**
-     * Relationship: Tenant
+     * Relationship: Tenant Master
      */
-    public function tenant(): BelongsTo
+    public function tenantMaster(): BelongsTo
     {
         return $this->belongsTo(TenantMaster::class, 'tenant_master_id');
     }
