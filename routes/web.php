@@ -8,6 +8,7 @@ use App\Livewire\Admin\SystemHealthDashboard;
 use App\Livewire\Admin\AnalyticsDashboard;
 use App\Livewire\Admin\BillingManagement;
 use App\Livewire\Admin\SubscriptionPlanManagement;
+use App\Livewire\Admin\CustomScheduleRunner;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -68,6 +69,11 @@ Route::middleware([
     Route::get('/admin/audit-logs', AuditLogViewer::class)
         ->middleware('check.permission:audit.view')
         ->name('admin.audit-logs');
+
+    // Schedule Runner
+    Route::get('/admin/schedule-runner', CustomScheduleRunner::class)
+        ->middleware('check.permission:schedule.runner')
+        ->name('admin.schedule-runner');
 
     // Permission Management (User Management / Rump Admin)
     Route::get('/um/{userId?}', \App\Livewire\Permissions\ManageMaster::class)

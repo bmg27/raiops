@@ -15,7 +15,7 @@ class SystemAdminSeeder extends Seeder
     {
         // Create default system admin if not exists
         $admin = User::firstOrCreate(
-            ['email' => 'admin@rainbo.local'],
+            ['email' => 'admin@raiops.local'],
             [
                 'name' => 'System Administrator',
                 'password' => Hash::make('password'), // Change in production!

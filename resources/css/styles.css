@@ -10,6 +10,6 @@
 @import './stylesheets/rai-chat.css';
 
 /* Themes */
-@import './stylesheets/themes/theme-rai.css';
-@import './stylesheets/themes/theme-slate.css';
+@import './stylesheets/themes/rai.css';
+@import './stylesheets/themes/sandbox.css';
 

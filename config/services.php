@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | RAI Integration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for communicating with RAI instances via webhooks.
+    | The webhook secret is used to sign and verify webhook payloads.
+    |
+    */
+
+    'rai' => [
+        'webhook_secret' => env('SCHEDULE_WEBHOOK_SECRET'),
+        'webhook_timeout' => env('RAI_WEBHOOK_TIMEOUT', 30),
+    ],
+
 ];

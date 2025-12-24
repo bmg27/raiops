@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\RaiWebhookController;
+use App\Http\Controllers\Api\ScheduleCallbackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,3 +28,16 @@ Route::prefix('webhooks/rai')->group(function () {
     Route::post('/audit', [RaiWebhookController::class, 'handleAuditEvent'])
         ->name('api.webhooks.rai.audit');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Schedule Callback Endpoint
+|--------------------------------------------------------------------------
+|
+| Receives progress callbacks from RAI instances during schedule execution.
+| Used by the webhook-based schedule runner system.
+|
+*/
+
+Route::post('/webhook/schedule-callback', [ScheduleCallbackController::class, 'handle'])
+    ->name('api.webhook.schedule-callback');
