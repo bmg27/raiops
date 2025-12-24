@@ -101,41 +101,41 @@
                         <tbody>
                             @php $currentCategory = null; @endphp
                             @foreach($commands as $cmd)
-                                @if($currentCategory !== $cmd['category'])
-                                    @php $currentCategory = $cmd['category']; @endphp
+                                @if($currentCategory !== $cmd->category)
+                                    @php $currentCategory = $cmd->category; @endphp
                                     <tr class="table-secondary">
                                         <td colspan="6" class="fw-bold small text-uppercase">
-                                            <i class="bi bi-folder me-1"></i>{{ $cmd['category'] ?? 'Uncategorized' }}
+                                            <i class="bi bi-folder me-1"></i>{{ $cmd->category ?? 'Uncategorized' }}
                                         </td>
                                     </tr>
                                 @endif
-                                <tr class="{{ !$cmd['schedule_enabled'] ? 'text-muted' : '' }}">
+                                <tr class="{{ !$cmd->schedule_enabled ? 'text-muted' : '' }}">
                                     <td>
                                         <div class="form-check form-switch">
                                             <input 
                                                 type="checkbox" 
                                                 class="form-check-input" 
-                                                {{ $cmd['schedule_enabled'] ? 'checked' : '' }}
-                                                wire:click="quickToggle({{ $cmd['id'] }})"
-                                                title="{{ $cmd['schedule_enabled'] ? 'Disable' : 'Enable' }} scheduled runs"
+                                                {{ $cmd->schedule_enabled ? 'checked' : '' }}
+                                                wire:click="quickToggle({{ $cmd->id }})"
+                                                title="{{ $cmd->schedule_enabled ? 'Disable' : 'Enable' }} scheduled runs"
                                             >
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold {{ !$cmd['schedule_enabled'] ? 'text-decoration-line-through' : '' }}">
-                                            {{ $cmd['display_name'] }}
+                                        <div class="fw-semibold {{ !$cmd->schedule_enabled ? 'text-decoration-line-through' : '' }}">
+                                            {{ $cmd->display_name }}
                                         </div>
-                                        <code class="small text-muted">{{ $cmd['command_name'] }}</code>
-                                        @if($cmd['description'])
-                                            <div class="small text-muted">{{ Str::limit($cmd['description'], 60) }}</div>
+                                        <code class="small text-muted">{{ $cmd->command_name }}</code>
+                                        @if($cmd->description)
+                                            <div class="small text-muted">{{ Str::limit($cmd->description, 60) }}</div>
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="badge bg-light text-dark">{{ $cmd['category'] }}</span>
+                                        <span class="badge bg-light text-dark">{{ $cmd->category }}</span>
                                     </td>
                                     <td>
-                                        @if($cmd['provider_name'])
-                                            <span class="badge bg-light text-dark">{{ $cmd['provider_name'] }}</span>
+                                        @if($cmd->provider_name)
+                                            <span class="badge bg-light text-dark">{{ $cmd->provider_name }}</span>
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
@@ -143,11 +143,11 @@
                                     <td>
                                         <select 
                                             class="form-select form-select-sm"
-                                            wire:change="quickSetFrequency({{ $cmd['id'] }}, $event.target.value)"
-                                            {{ !$cmd['schedule_enabled'] ? 'disabled' : '' }}
+                                            wire:change="quickSetFrequency({{ $cmd->id }}, $event.target.value)"
+                                            {{ !$cmd->schedule_enabled ? 'disabled' : '' }}
                                         >
                                             @foreach($frequencies as $key => $label)
-                                                <option value="{{ $key }}" {{ $cmd['schedule_frequency'] === $key ? 'selected' : '' }}>
+                                                <option value="{{ $key }}" {{ $cmd->schedule_frequency === $key ? 'selected' : '' }}>
                                                     {{ $label }}
                                                 </option>
                                             @endforeach
@@ -156,7 +156,7 @@
                                     <td>
                                         <button 
                                             class="btn btn-sm btn-outline-primary"
-                                            wire:click="openEditModal({{ $cmd['id'] }})"
+                                            wire:click="openEditModal({{ $cmd->id }})"
                                             title="Edit details"
                                         >
                                             <i class="bi bi-pencil"></i>
@@ -182,19 +182,19 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit Schedule: {{ $editingCommand['display_name'] }}</h5>
+                        <h5 class="modal-title">Edit Schedule: {{ $editingCommand->display_name }}</h5>
                         <button type="button" class="btn-close" wire:click="closeEditModal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Command</label>
-                            <code class="d-block p-2 bg-light rounded">{{ $editingCommand['command_name'] }}</code>
+                            <code class="d-block p-2 bg-light rounded">{{ $editingCommand->command_name }}</code>
                         </div>
 
-                        @if($editingCommand['description'])
+                        @if($editingCommand->description)
                             <div class="mb-3">
                                 <label class="form-label">Description</label>
-                                <p class="text-muted mb-0">{{ $editingCommand['description'] }}</p>
+                                <p class="text-muted mb-0">{{ $editingCommand->description }}</p>
                             </div>
                         @endif
 

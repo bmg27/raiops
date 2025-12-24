@@ -103,8 +103,7 @@ class ScheduleManagement extends Component
                 ->orderBy('scheduled_commands.category')
                 ->orderBy('scheduled_commands.sort_order')
                 ->orderBy('scheduled_commands.display_name')
-                ->get()
-                ->toArray();
+                ->get();
 
         } catch (\Exception $e) {
             Log::error("Failed to load scheduled commands", [
@@ -126,8 +125,8 @@ class ScheduleManagement extends Component
         $command = collect($this->commands)->firstWhere('id', $commandId);
         if ($command) {
             $this->editingCommand = $command;
-            $this->editFrequency = $command['schedule_frequency'];
-            $this->editEnabled = (bool) $command['schedule_enabled'];
+            $this->editFrequency = $command->schedule_frequency;
+            $this->editEnabled = (bool) $command->schedule_enabled;
         }
     }
 
@@ -149,7 +148,7 @@ class ScheduleManagement extends Component
             $db = $this->rdsService->query($rds);
 
             $db->table('scheduled_commands')
-                ->where('id', $this->editingCommand['id'])
+                ->where('id', $this->editingCommand->id)
                 ->update([
                     'schedule_frequency' => $this->editFrequency,
                     'schedule_enabled' => $this->editEnabled,
@@ -162,7 +161,7 @@ class ScheduleManagement extends Component
 
         } catch (\Exception $e) {
             Log::error("Failed to update scheduled command", [
-                'command_id' => $this->editingCommand['id'],
+                'command_id' => $this->editingCommand->id,
                 'error' => $e->getMessage(),
             ]);
             $this->dispatch('notify', type: 'error', message: 'Failed to save: ' . $e->getMessage());
@@ -176,7 +175,7 @@ class ScheduleManagement extends Component
             $db = $this->rdsService->query($rds);
 
             $command = collect($this->commands)->firstWhere('id', $commandId);
-            $newEnabled = !$command['schedule_enabled'];
+            $newEnabled = !$command->schedule_enabled;
 
             $db->table('scheduled_commands')
                 ->where('id', $commandId)
