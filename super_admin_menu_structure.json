@@ -34,6 +34,16 @@
                 "permission_name": "schedule.runner"
             },
             {
+                "id": 120,
+                "title": "Schedule Config",
+                "url": "\/admin\/schedule-management",
+                "icon": null,
+                "order": 41,
+                "super_admin_append": null,
+                "permission_id": 218,
+                "permission_name": "schedule.runner"
+            },
+            {
                 "id": 109,
                 "title": "Dashboard Manager",
                 "url": "\/dashboard-manager",

@@ -75,6 +75,11 @@ Route::middleware([
         ->middleware('check.permission:schedule.runner')
         ->name('admin.schedule-runner');
 
+    // Schedule Management
+    Route::get('/admin/schedule-management', \App\Livewire\Admin\ScheduleManagement::class)
+        ->middleware('check.permission:schedule.runner')
+        ->name('admin.schedule-management');
+
     // Permission Management (User Management / Rump Admin)
     Route::get('/um/{userId?}', \App\Livewire\Permissions\ManageMaster::class)
         ->middleware('check.permission:user.manage')
