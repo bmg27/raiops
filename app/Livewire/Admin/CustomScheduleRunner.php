@@ -52,6 +52,9 @@ class CustomScheduleRunner extends Component
     public $customParameters = [];
     public $showParameterModal = false;
     public $editedParams = [];
+    
+    // UI state
+    public $outputExpanded = false;
 
     public function mount()
     {
@@ -463,28 +466,63 @@ class CustomScheduleRunner extends Component
         $command = $this->availableCommands[$index];
         $commandName = $command['command'] ?? '';
         
-        // Analyze the command to get its signature
+        // Try to analyze the command (works for local commands)
         $analysis = CommandAnalyzer::analyzeCommand($commandName);
         
         $existingParams = $command['params'] ?? [];
         $currentParamsForDisplay = [];
 
-        foreach ($analysis['options'] as $option) {
-            $key = '--' . $option['name'];
-            $value = $existingParams[$key] ?? $existingParams[$option['name']] ?? $option['default'];
-            if ($this->isDateParameter($option['name']) && is_string($value) && $value !== '') {
-                $currentParamsForDisplay[$key] = $this->convertDateForDisplay($value, $commandName);
-            } else {
-                $currentParamsForDisplay[$key] = $value;
+        // If command exists locally, use its definition
+        if ($analysis['exists'] ?? false) {
+            foreach ($analysis['options'] as $option) {
+                $key = '--' . $option['name'];
+                $value = $existingParams[$key] ?? $existingParams[$option['name']] ?? $option['default'];
+                if ($this->isDateParameter($option['name']) && is_string($value) && $value !== '') {
+                    $currentParamsForDisplay[$key] = $this->convertDateForDisplay($value, $commandName);
+                } else {
+                    $currentParamsForDisplay[$key] = $value;
+                }
             }
-        }
-        foreach ($analysis['arguments'] as $argument) {
-            $key = $argument['name'];
-            $value = $existingParams[$key] ?? $argument['default'];
-            if ($this->isDateParameter($argument['name']) && is_string($value) && $value !== '') {
-                $currentParamsForDisplay[$key] = $this->convertDateForDisplay($value, $commandName);
-            } else {
-                $currentParamsForDisplay[$key] = $value;
+            foreach ($analysis['arguments'] as $argument) {
+                $key = $argument['name'];
+                $value = $existingParams[$key] ?? $argument['default'];
+                if ($this->isDateParameter($argument['name']) && is_string($value) && $value !== '') {
+                    $currentParamsForDisplay[$key] = $this->convertDateForDisplay($value, $commandName);
+                } else {
+                    $currentParamsForDisplay[$key] = $value;
+                }
+            }
+        } else {
+            // For remote RAI commands, use the stored params from scheduled_commands
+            // Parse common parameters from the default_params JSON or infer from command name
+            $commonParams = $this->getCommonCommandParams($commandName);
+            
+            foreach ($commonParams as $paramKey => $paramInfo) {
+                $key = '--' . $paramKey;
+                $value = $existingParams[$key] ?? $existingParams[$paramKey] ?? $paramInfo['default'];
+                if ($this->isDateParameter($paramKey) && is_string($value) && $value !== '') {
+                    $currentParamsForDisplay[$key] = $this->convertDateForDisplay($value, $commandName);
+                } else {
+                    $currentParamsForDisplay[$key] = $value;
+                }
+                // Add to analysis for display
+                $analysis['options'][] = [
+                    'name' => $paramKey,
+                    'shortcut' => null,
+                    'description' => $paramInfo['description'],
+                    'accepts_value' => true,
+                    'is_value_required' => false,
+                    'is_array' => false,
+                    'default' => $paramInfo['default'],
+                ];
+            }
+            
+            // Also include any existing params that weren't in our common list
+            foreach ($existingParams as $key => $value) {
+                $cleanKey = ltrim($key, '-');
+                if (!isset($currentParamsForDisplay['--' . $cleanKey]) && !isset($currentParamsForDisplay[$cleanKey])) {
+                    $currentParamsForDisplay['--' . $cleanKey] = $value;
+                }
             }
         }
 
@@ -494,8 +532,44 @@ class CustomScheduleRunner extends Component
             'current_params' => $currentParamsForDisplay,
         ];
 
-        $this->editedParams = $currentParamsForDisplay; // Initialize edited params
+        $this->editedParams = $currentParamsForDisplay;
         $this->showParameterModal = true;
+    }
+    
+    /**
+     * Get common parameters for RAI commands based on command name patterns
+     */
+    private function getCommonCommandParams(string $commandName): array
+    {
+        $params = [];
+        
+        // Most commands support tenant
+        $params['tenant'] = [
+            'description' => 'Tenant ID to run for',
+            'default' => null,
+        ];
+        
+        // Commands with "fetch" often have date range params
+        if (str_contains($commandName, 'fetch') || str_contains($commandName, 'sync')) {
+            $params['startDate'] = [
+                'description' => 'Start date (YYYYMMDD)',
+                'default' => date('Ymd', strtotime('-7 days')),
+            ];
+            $params['endDate'] = [
+                'description' => 'End date (YYYYMMDD)',
+                'default' => date('Ymd'),
+            ];
+        }
+        
+        // Location-specific commands
+        if (str_contains($commandName, 'location') || str_contains($commandName, 'resy') || str_contains($commandName, 'sevenrooms')) {
+            $params['location'] = [
+                'description' => 'Location ID',
+                'default' => null,
+            ];
+        }
+        
+        return $params;
     }
 
     private function convertDateForDisplay($dateValue, $commandName): string
@@ -557,6 +631,11 @@ class CustomScheduleRunner extends Component
         $this->customizingCommand = null;
         $this->customParameters = [];
         $this->editedParams = [];
+    }
+    
+    public function toggleOutput()
+    {
+        $this->outputExpanded = !$this->outputExpanded;
     }
 
     private function isDateParameter($name): bool
@@ -760,6 +839,14 @@ class CustomScheduleRunner extends Component
             return;
         }
 
+        // Get first command name for display
+        $firstCommand = $selectedCommandsData[0]['command'] ?? 'Unknown';
+        // Shorten command for display (just the base command name)
+        $firstCommandDisplay = explode(' ', $firstCommand)[0];
+        if (count($selectedCommandsData) > 1) {
+            $firstCommandDisplay .= ' (+' . (count($selectedCommandsData) - 1) . ' more)';
+        }
+
         // Create execution record
         $execution = CommandExecution::create([
             'command_name' => 'webhook:schedule',
@@ -771,6 +858,7 @@ class CustomScheduleRunner extends Component
             'started_at' => now(),
             'total_steps' => count($selectedCommandsData),
             'completed_steps' => 0,
+            'current_step' => $firstCommandDisplay,
         ]);
 
         // Build webhook URL from RDS instance app_url

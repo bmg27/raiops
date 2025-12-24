@@ -179,10 +179,15 @@
                             @endif
 
                             @if($execution->output)
-                                <details class="mt-3">
-                                    <summary class="cursor-pointer"><strong>Output Log</strong> (click to expand)</summary>
-                                    <pre class="bg-dark text-light p-3 rounded mt-2" style="max-height: 300px; overflow-y: auto; font-size: 0.85em;">{{ $execution->output }}</pre>
-                                </details>
+                                <div class="mt-3">
+                                    <button wire:click="toggleOutput" class="btn btn-sm btn-outline-secondary mb-2">
+                                        <i class="bi bi-{{ $outputExpanded ? 'chevron-up' : 'chevron-down' }} me-1"></i>
+                                        Output Log ({{ $outputExpanded ? 'click to collapse' : 'click to expand' }})
+                                    </button>
+                                    @if($outputExpanded)
+                                        <pre class="bg-dark text-light p-3 rounded" style="max-height: 300px; overflow-y: auto; font-size: 0.85em;">{{ $execution->output }}</pre>
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     @endif
@@ -516,17 +521,22 @@
         @endif
 
         {{-- PARAMETER CUSTOMIZATION MODAL --}}
-        @if($showParameterModal && !empty($customParameters))
+        @if($showParameterModal)
             <div class="modal fade show" style="display: block;" tabindex="-1">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">Customize Parameters: {{ $customParameters['command'] ?? '' }}</h5>
+                            <h5 class="modal-title">Customize Parameters: <code>{{ $customParameters['command'] ?? '' }}</code></h5>
                             <button wire:click="closeParameterModal" class="btn-close"></button>
                         </div>
                         <div class="modal-body">
                             @if(!empty($customParameters['analysis']['description']))
                                 <p class="text-muted">{{ $customParameters['analysis']['description'] }}</p>
+                            @elseif(empty($customParameters['analysis']['options']) && empty($customParameters['analysis']['arguments']))
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    This is a remote RAI command. Common parameters have been pre-populated based on the command type.
+                                </div>
                             @endif
 
                             @if(!empty($customParameters['analysis']['arguments']))
