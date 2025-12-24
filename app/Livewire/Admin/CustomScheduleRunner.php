@@ -126,7 +126,10 @@ class CustomScheduleRunner extends Component
 
     public function loadExecutionHistory()
     {
-        $query = CommandExecution::where('command_name', 'like', 'raiops:run-schedule%');
+        $query = CommandExecution::where(function ($q) {
+            $q->where('command_name', 'like', 'raiops:run-schedule%')
+              ->orWhere('command_name', 'like', 'webhook:schedule%');
+        });
         
         if ($this->isSuperAdmin) {
             if ($this->selectedTenantMasterId) {
@@ -312,7 +315,10 @@ class CustomScheduleRunner extends Component
 
     public function cancelExecution()
     {
-        $runningExecution = CommandExecution::where('command_name', 'like', 'raiops:run-schedule%')
+        $runningExecution = CommandExecution::where(function ($q) {
+                $q->where('command_name', 'like', 'raiops:run-schedule%')
+                  ->orWhere('command_name', 'like', 'webhook:schedule%');
+            })
             ->where('status', 'running')
             ->latest()
             ->first();
@@ -629,8 +635,11 @@ class CustomScheduleRunner extends Component
             $this->modalExecution = CommandExecution::find($this->selectedHistoryId);
         }
 
-        $runningExecution = CommandExecution::where('command_name', 'like', 'raiops:run-schedule%')
-            ->where('status', 'running')
+        $runningExecution = CommandExecution::where(function ($q) {
+                $q->where('command_name', 'like', 'raiops:run-schedule%')
+                  ->orWhere('command_name', 'like', 'webhook:schedule%');
+            })
+            ->whereIn('status', ['running', 'pending'])
             ->latest()
             ->first();
 
@@ -638,11 +647,16 @@ class CustomScheduleRunner extends Component
             $this->execution = $runningExecution;
             $this->latestExecutionId = $runningExecution->id;
 
-            if ($runningExecution->process_id && $this->isProcessRunning($runningExecution->process_id)) {
+            // For webhook executions, we trust the callback status - no local process to check
+            if ($runningExecution->command_name === 'webhook:schedule') {
+                $this->isRunning = true;
+                $this->canRun = false;
+            } elseif ($runningExecution->process_id && $this->isProcessRunning($runningExecution->process_id)) {
                 $this->isRunning = true;
                 $this->canRun = false;
                 $this->loadLogFile();
             } else {
+                // Local execution process died
                 $runningExecution->update([
                     'status' => 'failed',
                     'error' => 'Process terminated unexpectedly. PID: ' . $runningExecution->process_id,
@@ -652,7 +666,10 @@ class CustomScheduleRunner extends Component
                 $this->canRun = true;
             }
         } else {
-            $latest = CommandExecution::where('command_name', 'like', 'raiops:run-schedule%')
+            $latest = CommandExecution::where(function ($q) {
+                    $q->where('command_name', 'like', 'raiops:run-schedule%')
+                      ->orWhere('command_name', 'like', 'webhook:schedule%');
+                })
                 ->latest()
                 ->first();
 
