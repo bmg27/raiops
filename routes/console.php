@@ -43,3 +43,20 @@ Schedule::command('sync:ghost-users')
         \Illuminate\Support\Facades\Log::error('Scheduled sync-ghost-users failed');
     })
     ->description('Sync ghost users to all RDS instances');
+
+/**
+ * Tenant Schedule Runner
+ * 
+ * Triggers scheduled commands for all tenants via webhook to their RAI instances.
+ * Commands run based on their schedule_frequency (hourly, 2hours, 4hours, daily, etc.)
+ * 
+ * Run every hour - the command internally checks which frequencies are due.
+ */
+Schedule::command('raiops:trigger-tenant-schedules')
+    ->hourly()
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->onFailure(function () {
+        \Illuminate\Support\Facades\Log::error('Scheduled trigger-tenant-schedules failed');
+    })
+    ->description('Trigger scheduled commands for all tenants based on frequency');
