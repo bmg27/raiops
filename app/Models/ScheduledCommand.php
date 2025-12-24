@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\TenantIntegrationService;
 use Illuminate\Database\Eloquent\Model;
 
 class ScheduledCommand extends Model
@@ -105,33 +104,33 @@ class ScheduledCommand extends Model
     }
 
     /**
-     * Get commands that are applicable for a tenant based on their integrations
-     * Queries the RDS instance to check what integrations the tenant has configured
+     * Get all active commands for display in RAIOPS UI
+     * Note: RAI will filter commands based on tenant integrations at execution time
      * 
-     * @param int $tenantMasterId The RAIOPS tenant_master_id
+     * @param int|null $tenantMasterId The RAIOPS tenant_master_id (unused, kept for API compatibility)
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public static function getForTenantMaster(int $tenantMasterId): \Illuminate\Database\Eloquent\Collection
+    public static function getForTenantMaster(?int $tenantMasterId = null): \Illuminate\Database\Eloquent\Collection
     {
-        // Get tenant integrations from RDS
-        $integrations = TenantIntegrationService::getTenantIntegrations($tenantMasterId);
-        
-        $query = self::active()->defaultEnabled();
-        
-        // Build conditions: include commands with no required integration OR where tenant has the integration
-        $query->where(function ($q) use ($integrations) {
-            // Commands that don't require a specific integration (always include)
-            $q->whereNull('required_integration');
-            
-            // Dynamically add OR conditions for each integration the tenant has enabled
-            foreach ($integrations as $integrationKey => $isEnabled) {
-                if ($isEnabled === true && in_array($integrationKey, ['toast', 'seven_shifts', 'resy'])) {
-                    $q->orWhere('required_integration', $integrationKey);
-                }
-            }
-        });
-        
-        return $query->orderBy('sort_order')
+        // Return all active default-enabled commands
+        // RAI's custom:schedule will filter based on actual tenant integrations
+        return self::active()
+            ->defaultEnabled()
+            ->orderBy('sort_order')
+            ->orderBy('display_name')
+            ->get();
+    }
+    
+    /**
+     * Get all active commands (not just default-enabled)
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function getAllActive(): \Illuminate\Database\Eloquent\Collection
+    {
+        return self::active()
+            ->orderBy('category')
+            ->orderBy('sort_order')
             ->orderBy('display_name')
             ->get();
     }
