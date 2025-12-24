@@ -777,7 +777,9 @@ class CustomScheduleRunner extends Component
         $webhookUrl = rtrim($tenant->rdsInstance->app_url, '/') . '/api/webhook/schedule';
         
         // Build callback URL for RAI to report progress back
-        $callbackUrl = url('/api/webhook/schedule-callback');
+        // Use configured callback URL (in case APP_URL doesn't match what RAI can reach)
+        $callbackBaseUrl = config('services.rai.callback_base_url') ?: config('app.url');
+        $callbackUrl = rtrim($callbackBaseUrl, '/') . '/api/webhook/schedule-callback';
 
         // Build webhook payload
         $webhookPayload = [

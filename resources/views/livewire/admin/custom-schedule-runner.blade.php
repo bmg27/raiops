@@ -1,5 +1,6 @@
 <div>
-    <div wire:poll.5s="checkStatus">
+    {{-- Poll faster (2s) when running, slower (5s) otherwise --}}
+    <div wire:poll.{{ $isRunning ? '2s' : '5s' }}="checkStatus">
         <x-page-header title="Schedule Runner"/>
 
         <livewire:admin.flash-message fade="true"/>
@@ -144,18 +145,44 @@
             <div class="card">
                 <div class="card-body">
                     @if($isRunning && $execution)
-                        <div class="alert alert-info">
-                            <h5><i class="bi bi-play-circle me-2"></i>Command Running</h5>
-                            <p><strong>Status:</strong> {{ $execution->status }}</p>
-                            <p><strong>Progress:</strong> {{ $execution->completed_steps }} / {{ $execution->total_steps }} ({{ $execution->progress_percentage }}%)</p>
-                            @if($execution->current_step)
-                                <p><strong>Current Step:</strong> <code>{{ $execution->current_step }}</code></p>
-                            @endif
-                            @if($execution->output)
-                                <div class="mt-3">
-                                    <strong>Output:</strong>
-                                    <pre class="bg-dark text-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">{{ $execution->output }}</pre>
+                        <div class="alert alert-info mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                <h5 class="mb-0">Command Running</h5>
+                            </div>
+                            
+                            {{-- Progress Bar --}}
+                            @php
+                                $runTotal = $execution->total_steps ?: 1;
+                                $runCompleted = $execution->completed_steps ?: 0;
+                                $runPercent = min(100, round(($runCompleted / $runTotal) * 100));
+                            @endphp
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span><strong>Progress:</strong></span>
+                                    <span>{{ $runCompleted }} / {{ $execution->total_steps }} ({{ $runPercent }}%)</span>
                                 </div>
+                                <div class="progress" style="height: 24px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         role="progressbar" 
+                                         style="width: {{ $runPercent }}%;">
+                                        {{ $runPercent }}%
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if($execution->current_step)
+                                <div class="bg-white rounded p-2 mb-2">
+                                    <i class="bi bi-arrow-right-circle text-primary me-1"></i>
+                                    <strong>Running:</strong> <code>{{ $execution->current_step }}</code>
+                                </div>
+                            @endif
+
+                            @if($execution->output)
+                                <details class="mt-3">
+                                    <summary class="cursor-pointer"><strong>Output Log</strong> (click to expand)</summary>
+                                    <pre class="bg-dark text-light p-3 rounded mt-2" style="max-height: 300px; overflow-y: auto; font-size: 0.85em;">{{ $execution->output }}</pre>
+                                </details>
                             @endif
                         </div>
                     @endif
@@ -384,19 +411,55 @@
                         </div>
                         <div class="modal-body">
                             <p><strong>Status:</strong> 
-                                @if($modalExecution->status === 'running')
-                                    <span class="badge bg-primary">Running</span>
+                                @if($modalExecution->status === 'pending')
+                                    <span class="badge bg-secondary">Pending</span>
+                                @elseif($modalExecution->status === 'running')
+                                    <span class="badge bg-primary">
+                                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        Running
+                                    </span>
                                 @elseif($modalExecution->status === 'completed')
                                     <span class="badge bg-success">Completed</span>
                                 @else
                                     <span class="badge bg-danger">Failed</span>
                                 @endif
                             </p>
-                            <p><strong>Progress:</strong> {{ $modalExecution->completed_steps }} / {{ $modalExecution->total_steps }}</p>
+
+                            {{-- Progress Bar --}}
+                            @php
+                                $total = $modalExecution->total_steps ?: 1;
+                                $completed = $modalExecution->completed_steps ?: 0;
+                                $percent = min(100, round(($completed / $total) * 100));
+                            @endphp
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <strong>Progress:</strong>
+                                    <span>{{ $completed }} / {{ $modalExecution->total_steps }} ({{ $percent }}%)</span>
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar @if($modalExecution->status === 'running') progress-bar-striped progress-bar-animated @endif @if($modalExecution->status === 'failed') bg-danger @elseif($modalExecution->status === 'completed') bg-success @endif" 
+                                         role="progressbar" 
+                                         style="width: {{ $percent }}%;" 
+                                         aria-valuenow="{{ $percent }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Current Step (only shown when running) --}}
+                            @if($modalExecution->status === 'running' && $modalExecution->current_step)
+                                <div class="alert alert-info py-2 mb-3">
+                                    <i class="bi bi-arrow-right-circle me-2"></i>
+                                    <strong>Currently running:</strong> 
+                                    <code>{{ $modalExecution->current_step }}</code>
+                                </div>
+                            @endif
+
                             @if($modalExecution->output)
                                 <div class="mt-3">
                                     <strong>Output:</strong>
-                                    <pre class="bg-dark text-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">{{ $modalExecution->output }}</pre>
+                                    <pre class="bg-dark text-light p-3 rounded" style="max-height: 400px; overflow-y: auto; font-size: 0.85em;">{{ $modalExecution->output }}</pre>
                                 </div>
                             @endif
                             @if($modalExecution->error)

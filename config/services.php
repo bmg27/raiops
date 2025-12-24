@@ -48,6 +48,8 @@ return [
     'rai' => [
         'webhook_secret' => env('SCHEDULE_WEBHOOK_SECRET'),
         'webhook_timeout' => env('RAI_WEBHOOK_TIMEOUT', 30),
+        // Base URL for callbacks from RAI -> RAIOPS (fallback to APP_URL if not set)
+        'callback_base_url' => env('RAIOPS_CALLBACK_URL', env('APP_URL')),
     ],
 
 ];
