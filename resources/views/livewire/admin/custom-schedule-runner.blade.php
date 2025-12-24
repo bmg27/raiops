@@ -4,44 +4,39 @@
 
         <livewire:admin.flash-message fade="true"/>
 
-        {{-- TENANT SELECTION --}}
+        {{-- WORKING TENANT SELECTION --}}
         @if($isSuperAdmin)
             <div class="card mb-3">
                 <div class="card-body py-2">
                     <div class="row align-items-center">
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted mb-1">Filter UI by Tenant:</label>
-                            <select class="form-select form-select-sm" wire:model.live="selectedTenantMasterId">
-                                <option value="">All Tenants</option>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted mb-1">Working Tenant:</label>
+                            <select class="form-select form-select-sm" wire:model.live="workingTenantMasterId">
+                                <option value="">Select Tenant...</option>
                                 @foreach($tenants as $tenant)
                                     <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted mb-1">Commands run for Tenant:</label>
-                            <select class="form-select form-select-sm" wire:model.live="commandTenantMasterId">
-                                <option value="">No Tenant (All)</option>
-                                @foreach($tenants as $tenant)
-                                    <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            @if($commandTenantMasterId)
-                                @php $commandTenant = $tenants->find($commandTenantMasterId); @endphp
-                                <span class="text-muted small">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Commands will run for: <strong>{{ $commandTenant->name ?? 'Unknown' }}</strong>
-                                    @if($commandTenant && $commandTenant->rdsInstance)
-                                        <br>RDS: <strong>{{ $commandTenant->rdsInstance->name }}</strong>
-                                    @endif
-                                </span>
+                        <div class="col-md-6">
+                            @if($workingTenantMasterId)
+                                @php $workingTenant = $tenants->find($workingTenantMasterId); @endphp
+                                <div class="d-flex align-items-center h-100 pt-3">
+                                    <span class="text-muted small">
+                                        <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                        Working with: <strong>{{ $workingTenant->name ?? 'Unknown' }}</strong>
+                                        @if($workingTenant && $workingTenant->rdsInstance)
+                                            <span class="ms-2 badge bg-secondary">{{ $workingTenant->rdsInstance->name }}</span>
+                                        @endif
+                                    </span>
+                                </div>
                             @else
-                                <span class="text-muted small">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Commands will run for: <strong>All Tenants</strong>
-                                </span>
+                                <div class="d-flex align-items-center h-100 pt-3">
+                                    <span class="text-warning small">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        Select a tenant to view commands, executions, and presets
+                                    </span>
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -52,7 +47,7 @@
                 <div class="card-body py-2">
                     <span class="text-muted small">
                         <i class="bi bi-info-circle me-1"></i>
-                        Commands will run for your tenant: <strong>{{ auth()->user()->tenantMaster->name ?? 'Your Tenant' }}</strong>
+                        Working with tenant: <strong>{{ auth()->user()->tenantMaster->name ?? 'Your Tenant' }}</strong>
                     </span>
                 </div>
             </div>
@@ -82,7 +77,7 @@
                                 wire:confirm="Are you sure you want to run the selected commands?"
                                 class="btn btn-primary"
                                 wire:loading.attr="disabled"
-                                @if(!$commandTenantMasterId && !$selectedTenantMasterId) disabled @endif>
+                                @if(!$workingTenantMasterId) disabled @endif>
                                 <i class="bi bi-play-circle me-2"></i>
                                 Start Command
                             </button>

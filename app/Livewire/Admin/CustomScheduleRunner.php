@@ -43,8 +43,7 @@ class CustomScheduleRunner extends Component
     public $showArchivedInList = false;
     
     // Tenant selection (super admin only)
-    public $selectedTenantMasterId = null; // For filtering UI data (executions, presets)
-    public $commandTenantMasterId = null; // For commands to run against (determines which tenant commands execute for)
+    public $workingTenantMasterId = null; // Single tenant context for everything
     public $tenants = [];
     public $isSuperAdmin = false;
     
@@ -62,25 +61,16 @@ class CustomScheduleRunner extends Component
         if ($this->isSuperAdmin) {
             $this->tenants = TenantMaster::with('rdsInstance')->orderBy('name')->get();
             
-            // Load selectedTenantMasterId from cookie (for UI filtering)
-            if ($cookie = Cookie::get('schedule_runner_selected_tenant_master')) {
+            // Load working tenant from cookie
+            if ($cookie = Cookie::get('schedule_runner_working_tenant')) {
                 $cookie = $cookie ?: null;
                 if ($cookie === null || TenantMaster::find($cookie)) {
-                    $this->selectedTenantMasterId = $cookie;
-                }
-            }
-            
-            // Load commandTenantMasterId from cookie (for command execution)
-            if ($cookie = Cookie::get('schedule_runner_command_tenant_master')) {
-                $cookie = $cookie ?: null;
-                if ($cookie === null || TenantMaster::find($cookie)) {
-                    $this->commandTenantMasterId = $cookie;
+                    $this->workingTenantMasterId = $cookie;
                 }
             }
         } else {
             // Regular users: use their tenant (if they have one)
-            $this->selectedTenantMasterId = auth()->user()->tenant_master_id ?? null;
-            $this->commandTenantMasterId = auth()->user()->tenant_master_id ?? null;
+            $this->workingTenantMasterId = auth()->user()->tenant_master_id ?? null;
         }
         
         $this->loadAvailableCommands();
@@ -101,24 +91,15 @@ class CustomScheduleRunner extends Component
     {
         $query = CommandPreset::active();
         
-        if ($this->isSuperAdmin) {
-            if ($this->selectedTenantMasterId) {
-                $query->where('tenant_master_id', $this->selectedTenantMasterId);
-            }
-        } else {
-            // For now, only super admins can use this
-            $query->where('tenant_master_id', $this->selectedTenantMasterId);
+        if ($this->workingTenantMasterId) {
+            $query->where('tenant_master_id', $this->workingTenantMasterId);
         }
         
         $this->presets = $query->with('tenantMaster')->orderBy('name')->get();
         
         $archivedQuery = CommandPreset::archived();
-        if ($this->isSuperAdmin) {
-            if ($this->selectedTenantMasterId) {
-                $archivedQuery->where('tenant_master_id', $this->selectedTenantMasterId);
-            }
-        } else {
-            $archivedQuery->where('tenant_master_id', $this->selectedTenantMasterId);
+        if ($this->workingTenantMasterId) {
+            $archivedQuery->where('tenant_master_id', $this->workingTenantMasterId);
         }
         
         $this->archivedPresets = $archivedQuery->with('tenantMaster')->orderBy('name')->get();
@@ -131,14 +112,8 @@ class CustomScheduleRunner extends Component
               ->orWhere('command_name', 'like', 'webhook:schedule%');
         });
         
-        if ($this->isSuperAdmin) {
-            if ($this->selectedTenantMasterId) {
-                $query->where('tenant_master_id', $this->selectedTenantMasterId);
-            }
-        } else {
-            if ($this->selectedTenantMasterId) {
-                $query->where('tenant_master_id', $this->selectedTenantMasterId);
-            }
+        if ($this->workingTenantMasterId) {
+            $query->where('tenant_master_id', $this->workingTenantMasterId);
         }
         
         $this->executionHistory = $query->with('tenantMaster', 'rdsInstance')
@@ -147,29 +122,21 @@ class CustomScheduleRunner extends Component
             ->get();
     }
     
-    public function updatedSelectedTenantMasterId()
+    public function updatedWorkingTenantMasterId()
     {
-        $this->selectedTenantMasterId = $this->selectedTenantMasterId ?: null;
+        $this->workingTenantMasterId = $this->workingTenantMasterId ?: null;
         
         if ($this->isSuperAdmin) {
-            Cookie::queue('schedule_runner_selected_tenant_master', $this->selectedTenantMasterId ?? '', 60 * 24 * 30);
+            Cookie::queue('schedule_runner_working_tenant', $this->workingTenantMasterId ?? '', 60 * 24 * 30);
         }
         
+        // Clear selected commands when tenant changes (different command list)
+        $this->selectedCommands = [];
+        
+        // Reload everything for the new tenant context
+        $this->loadAvailableCommands();
         $this->loadPresets();
         $this->loadExecutionHistory();
-        // Don't reload commands here - that's controlled by commandTenantMasterId
-    }
-    
-    public function updatedCommandTenantMasterId()
-    {
-        $this->commandTenantMasterId = $this->commandTenantMasterId ?: null;
-        
-        if ($this->isSuperAdmin) {
-            Cookie::queue('schedule_runner_command_tenant_master', $this->commandTenantMasterId ?? '', 60 * 24 * 30);
-        }
-        
-        // Reload commands when command tenant changes (integration filtering)
-        $this->loadAvailableCommands();
     }
 
     public function viewExecution($id)
@@ -246,7 +213,7 @@ class CustomScheduleRunner extends Component
             }
         }
 
-        $presetTenantMasterId = $this->selectedTenantMasterId;
+        $presetTenantMasterId = $this->workingTenantMasterId;
 
         if ($this->editingPresetId) {
             $preset = CommandPreset::find($this->editingPresetId);
@@ -409,8 +376,8 @@ class CustomScheduleRunner extends Component
 
     public function loadAvailableCommands()
     {
-        // Determine which tenant to use for filtering commands (integration-based)
-        $tenantMasterId = $this->commandTenantMasterId ?? $this->selectedTenantMasterId;
+        // Use working tenant for filtering commands (integration-based)
+        $tenantMasterId = $this->workingTenantMasterId;
         
         try {
             $rdsService = app(RdsConnectionService::class);
@@ -729,8 +696,8 @@ class CustomScheduleRunner extends Component
                 $commandString = $baseCommandName;
                 $params = $cmdData['params'] ?? [];
                 
-                // Remove any existing --tenant from params if commandTenantMasterId is set
-                if ($this->commandTenantMasterId) {
+                // Remove any existing --tenant from params if workingTenantMasterId is set
+                if ($this->workingTenantMasterId) {
                     unset($params['--tenant']);
                     unset($params['tenant']);
                 }
@@ -760,12 +727,11 @@ class CustomScheduleRunner extends Component
                     }
                 }
                 
-                // If commandTenantMasterId is set, add --tenant parameter to commands that support it
-                // Note: This should be the remote_tenant_id (RAI tenant_id), not tenant_master_id
-                if ($this->commandTenantMasterId && strpos($commandString, '--tenant=') === false) {
+                // Add --tenant parameter using RAI's remote_tenant_id
+                if ($this->workingTenantMasterId && strpos($commandString, '--tenant=') === false) {
                     $requiresTenant = $cmdData['requires_tenant'] ?? true;
                     if ($requiresTenant) {
-                        $tenant = TenantMaster::find($this->commandTenantMasterId);
+                        $tenant = TenantMaster::find($this->workingTenantMasterId);
                         if ($tenant && $tenant->remote_tenant_id) {
                             $commandString .= " --tenant={$tenant->remote_tenant_id}";
                         }
@@ -780,13 +746,13 @@ class CustomScheduleRunner extends Component
             }
         }
 
-        // Use commandTenantMasterId for execution, fallback to selectedTenantMasterId
-        $executionTenantMasterId = $this->commandTenantMasterId ?? $this->selectedTenantMasterId;
-        
-        if (!$executionTenantMasterId) {
-            $this->dispatch('notify', type: 'error', message: 'Please select a tenant for command execution!');
+        // Use working tenant for execution
+        if (!$this->workingTenantMasterId) {
+            $this->dispatch('notify', type: 'error', message: 'Please select a working tenant first!');
             return;
         }
+        
+        $executionTenantMasterId = $this->workingTenantMasterId;
 
         $tenant = TenantMaster::with('rdsInstance')->find($executionTenantMasterId);
         if (!$tenant || !$tenant->rdsInstance) {
