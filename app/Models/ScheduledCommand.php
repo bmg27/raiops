@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\RdsConnectionService;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\TenantMaster;
 
 class ScheduledCommand extends Model
 {
@@ -104,19 +106,44 @@ class ScheduledCommand extends Model
     }
 
     /**
-     * Get all active commands for display in RAIOPS UI
-     * Note: RAI will filter commands based on tenant integrations at execution time
+     * Get commands filtered by tenant's actual integrations
+     * Queries the tenant's RDS to check what integrations they have configured
      * 
-     * @param int|null $tenantMasterId The RAIOPS tenant_master_id (unused, kept for API compatibility)
+     * @param int $tenantMasterId The RAIOPS tenant_master_id
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public static function getForTenantMaster(?int $tenantMasterId = null): \Illuminate\Database\Eloquent\Collection
+    public static function getForTenantMaster(int $tenantMasterId): \Illuminate\Database\Eloquent\Collection
     {
-        // Return all active default-enabled commands
-        // RAI's custom:schedule will filter based on actual tenant integrations
-        return self::active()
-            ->defaultEnabled()
-            ->orderBy('sort_order')
+        // Get TenantMaster with RDS instance
+        $tenantMaster = TenantMaster::with('rdsInstance')->find($tenantMasterId);
+        if (!$tenantMaster || !$tenantMaster->rdsInstance) {
+            // No RDS instance, return all commands (let RAI filter)
+            return self::getAllActive();
+        }
+
+        // Query the tenant's RDS for their integrations
+        $rdsService = app(RdsConnectionService::class);
+        $integrations = $rdsService->getTenantIntegrations(
+            $tenantMaster->rdsInstance,
+            $tenantMaster->remote_tenant_id
+        );
+
+        // Build query with integration filtering
+        $query = self::active()->defaultEnabled();
+        
+        $query->where(function ($q) use ($integrations) {
+            // Commands that don't require a specific integration (always include)
+            $q->whereNull('required_integration');
+            
+            // Add commands for integrations the tenant has enabled
+            foreach ($integrations as $integrationKey => $isEnabled) {
+                if ($isEnabled === true && in_array($integrationKey, ['toast', 'seven_shifts', 'resy'])) {
+                    $q->orWhere('required_integration', $integrationKey);
+                }
+            }
+        });
+
+        return $query->orderBy('sort_order')
             ->orderBy('display_name')
             ->get();
     }

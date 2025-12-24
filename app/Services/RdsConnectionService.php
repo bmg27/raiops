@@ -499,6 +499,155 @@ class RdsConnectionService
     }
 
     /**
+     * Get tenant integrations from an RDS instance
+     * Checks both new integrations table and legacy rai_tenant_integrations
+     * 
+     * @param RdsInstance $rdsInstance
+     * @param int $tenantId RAI tenant_id (not tenant_master_id)
+     * @return array Integration status array (e.g., ['toast' => true, 'seven_shifts' => false, ...])
+     */
+    public function getTenantIntegrations(RdsInstance $rdsInstance, int $tenantId): array
+    {
+        $result = [
+            'toast' => false,
+            'seven_shifts' => false,
+            'resy' => false,
+            'has_locations' => false,
+        ];
+
+        try {
+            $db = $this->query($rdsInstance);
+
+            // Check if tenant has locations
+            $locationCount = $db->table('locations')
+                ->where('tenant_id', $tenantId)
+                ->count();
+            $result['has_locations'] = $locationCount > 0;
+
+            // Get location IDs for location-level integration checks
+            $locationIds = $db->table('locations')
+                ->where('tenant_id', $tenantId)
+                ->pluck('id')
+                ->toArray();
+
+            // Try NEW integrations table first
+            $hasNewIntegrations = false;
+            if ($this->tableExists($db, 'integrations') && $this->tableExists($db, 'providers')) {
+                // Provider classname mapping
+                $providerMap = [
+                    'ToastProvider' => 'toast',
+                    'SevenProvider' => 'seven_shifts', 
+                    'ResyProvider' => 'resy',
+                ];
+
+                // Get tenant-level integrations
+                $tenantIntegrations = $db->table('integrations')
+                    ->join('providers', 'integrations.provider_id', '=', 'providers.id')
+                    ->where('integrations.integrated_type', 'App\\Models\\Rai\\Tenant')
+                    ->where('integrations.integrated_id', $tenantId)
+                    ->where('integrations.is_active', true)
+                    ->select('providers.classname', 'integrations.settings')
+                    ->get();
+
+                foreach ($tenantIntegrations as $integration) {
+                    $hasNewIntegrations = true;
+                    foreach ($providerMap as $className => $key) {
+                        if (str_contains($integration->classname, $className)) {
+                            // Check if settings are not empty
+                            $result[$key] = !empty($integration->settings);
+                            break;
+                        }
+                    }
+                }
+
+                // Get location-level integrations
+                if (!empty($locationIds)) {
+                    $locationIntegrations = $db->table('integrations')
+                        ->join('providers', 'integrations.provider_id', '=', 'providers.id')
+                        ->where('integrations.integrated_type', 'App\\Models\\Rai\\Location')
+                        ->whereIn('integrations.integrated_id', $locationIds)
+                        ->where('integrations.is_active', true)
+                        ->select('providers.classname', 'integrations.settings')
+                        ->get();
+
+                    foreach ($locationIntegrations as $integration) {
+                        $hasNewIntegrations = true;
+                        foreach ($providerMap as $className => $key) {
+                            if (str_contains($integration->classname, $className) && !$result[$key]) {
+                                $result[$key] = !empty($integration->settings);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Fallback to LEGACY tables if new system has no data
+            if (!$hasNewIntegrations) {
+                // Check rai_tenant_integrations
+                if ($this->tableExists($db, 'rai_tenant_integrations')) {
+                    $legacyIntegrations = $db->table('rai_tenant_integrations')
+                        ->where('tenant_id', $tenantId)
+                        ->where('status', 'active')
+                        ->pluck('integration_slug')
+                        ->toArray();
+
+                    $result['seven_shifts'] = in_array('SEVEN_SHIFTS_API', $legacyIntegrations);
+                }
+
+                // Check rai_location_integrations for location-based integrations
+                if (!empty($locationIds) && $this->tableExists($db, 'rai_location_integrations')) {
+                    $locationIntegrations = $db->table('rai_location_integrations')
+                        ->whereIn('location_id', $locationIds)
+                        ->where('status', 'active')
+                        ->pluck('integration_slug')
+                        ->toArray();
+
+                    if (in_array('RESY_API', $locationIntegrations)) {
+                        $result['resy'] = true;
+                    }
+                }
+
+                // Toast: check locations.toast_location field (legacy)
+                if ($result['has_locations']) {
+                    $hasToast = $db->table('locations')
+                        ->where('tenant_id', $tenantId)
+                        ->whereNotNull('toast_location')
+                        ->where('toast_location', '!=', '')
+                        ->exists();
+                    $result['toast'] = $hasToast;
+                }
+            }
+
+            Log::debug("Got tenant integrations from RDS", [
+                'rds_instance_id' => $rdsInstance->id,
+                'tenant_id' => $tenantId,
+                'integrations' => $result,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Failed to get tenant integrations from RDS {$rdsInstance->id}", [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Check if a table exists in the database
+     */
+    protected function tableExists(\Illuminate\Database\Connection $db, string $table): bool
+    {
+        try {
+            return $db->getSchemaBuilder()->hasTable($table);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
      * Purge a connection to force reconnection
      */
     public function purgeConnection(RdsInstance $rdsInstance): void

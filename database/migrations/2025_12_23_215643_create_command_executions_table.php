@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('tenant_master_id')->nullable()->index(); // RAIOPS tenant_master ID
             $table->unsignedBigInteger('rds_instance_id')->nullable()->index(); // RDS instance where command runs
             $table->string('triggered_by', 50)->default('manual'); // 'manual', 'cron', 'api'
-            $table->enum('status', ['running', 'completed', 'failed'])->default('running');
+            $table->enum('status', ['pending', 'running', 'completed', 'failed'])->default('pending');
             $table->integer('process_id')->nullable();
             $table->text('current_step')->nullable();
             $table->integer('total_steps')->default(0);
