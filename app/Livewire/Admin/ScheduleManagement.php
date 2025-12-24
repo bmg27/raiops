@@ -244,6 +244,6 @@ class ScheduleManagement extends Component
     {
         return view('livewire.admin.schedule-management', [
             'categories' => $this->getCategories(),
-        ]);
+        ])->layout('layouts.rai');
     }
 }
