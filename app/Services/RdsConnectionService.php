@@ -499,154 +499,210 @@ class RdsConnectionService
     }
 
     /**
-     * Get tenant integrations from an RDS instance
-     * Checks both new integrations table and legacy rai_tenant_integrations
+     * Get provider IDs that a tenant has active integrations for
+     * Checks both tenant-level and location-level integrations
      * 
      * @param RdsInstance $rdsInstance
      * @param int $tenantId RAI tenant_id (not tenant_master_id)
-     * @return array Integration status array (e.g., ['toast' => true, 'seven_shifts' => false, ...])
+     * @return array Array of provider IDs
      */
-    public function getTenantIntegrations(RdsInstance $rdsInstance, int $tenantId): array
+    public function getTenantProviderIds(RdsInstance $rdsInstance, int $tenantId): array
     {
-        $result = [
-            'toast' => false,
-            'seven_shifts' => false,
-            'resy' => false,
-            'has_locations' => false,
-        ];
+        $providerIds = [];
 
         try {
             $db = $this->query($rdsInstance);
 
-            // Check if tenant has locations
-            $locationCount = $db->table('locations')
-                ->where('tenant_id', $tenantId)
-                ->count();
-            $result['has_locations'] = $locationCount > 0;
+            // Get tenant-level integrations
+            $tenantIntegrations = $db->table('integrations')
+                ->where('integrated_type', 'App\\Models\\Rai\\Tenant')
+                ->where('integrated_id', $tenantId)
+                ->where('is_active', true)
+                ->pluck('provider_id')
+                ->toArray();
 
-            // Get location IDs for location-level integration checks
+            $providerIds = array_merge($providerIds, $tenantIntegrations);
+
+            // Get location IDs for this tenant
             $locationIds = $db->table('locations')
                 ->where('tenant_id', $tenantId)
                 ->pluck('id')
                 ->toArray();
 
-            // Try NEW integrations table first
-            $hasNewIntegrations = false;
-            if ($this->tableExists($db, 'integrations') && $this->tableExists($db, 'providers')) {
-                // Provider classname mapping
-                $providerMap = [
-                    'ToastProvider' => 'toast',
-                    'SevenProvider' => 'seven_shifts', 
-                    'ResyProvider' => 'resy',
-                ];
+            // Get location-level integrations
+            if (!empty($locationIds)) {
+                $locationIntegrations = $db->table('integrations')
+                    ->where('integrated_type', 'App\\Models\\Rai\\Location')
+                    ->whereIn('integrated_id', $locationIds)
+                    ->where('is_active', true)
+                    ->pluck('provider_id')
+                    ->toArray();
 
-                // Get tenant-level integrations
-                $tenantIntegrations = $db->table('integrations')
-                    ->join('providers', 'integrations.provider_id', '=', 'providers.id')
-                    ->where('integrations.integrated_type', 'App\\Models\\Rai\\Tenant')
-                    ->where('integrations.integrated_id', $tenantId)
-                    ->where('integrations.is_active', true)
-                    ->select('providers.classname', 'integrations.settings')
-                    ->get();
-
-                foreach ($tenantIntegrations as $integration) {
-                    $hasNewIntegrations = true;
-                    foreach ($providerMap as $className => $key) {
-                        if (str_contains($integration->classname, $className)) {
-                            // Check if settings are not empty
-                            $result[$key] = !empty($integration->settings);
-                            break;
-                        }
-                    }
-                }
-
-                // Get location-level integrations
-                if (!empty($locationIds)) {
-                    $locationIntegrations = $db->table('integrations')
-                        ->join('providers', 'integrations.provider_id', '=', 'providers.id')
-                        ->where('integrations.integrated_type', 'App\\Models\\Rai\\Location')
-                        ->whereIn('integrations.integrated_id', $locationIds)
-                        ->where('integrations.is_active', true)
-                        ->select('providers.classname', 'integrations.settings')
-                        ->get();
-
-                    foreach ($locationIntegrations as $integration) {
-                        $hasNewIntegrations = true;
-                        foreach ($providerMap as $className => $key) {
-                            if (str_contains($integration->classname, $className) && !$result[$key]) {
-                                $result[$key] = !empty($integration->settings);
-                                break;
-                            }
-                        }
-                    }
-                }
+                $providerIds = array_merge($providerIds, $locationIntegrations);
             }
 
-            // Fallback to LEGACY tables if new system has no data
-            if (!$hasNewIntegrations) {
-                // Check rai_tenant_integrations
-                if ($this->tableExists($db, 'rai_tenant_integrations')) {
-                    $legacyIntegrations = $db->table('rai_tenant_integrations')
-                        ->where('tenant_id', $tenantId)
-                        ->where('status', 'active')
-                        ->pluck('integration_slug')
-                        ->toArray();
+            $providerIds = array_unique(array_filter($providerIds));
 
-                    $result['seven_shifts'] = in_array('SEVEN_SHIFTS_API', $legacyIntegrations);
-                }
-
-                // Check rai_location_integrations for location-based integrations
-                if (!empty($locationIds) && $this->tableExists($db, 'rai_location_integrations')) {
-                    $locationIntegrations = $db->table('rai_location_integrations')
-                        ->whereIn('location_id', $locationIds)
-                        ->where('status', 'active')
-                        ->pluck('integration_slug')
-                        ->toArray();
-
-                    if (in_array('RESY_API', $locationIntegrations)) {
-                        $result['resy'] = true;
-                    }
-                }
-
-                // Toast: check locations.toast_location field (legacy)
-                if ($result['has_locations']) {
-                    $hasToast = $db->table('locations')
-                        ->where('tenant_id', $tenantId)
-                        ->whereNotNull('toast_location')
-                        ->where('toast_location', '!=', '')
-                        ->exists();
-                    $result['toast'] = $hasToast;
-                }
-            }
-
-            Log::debug("Got tenant integrations from RDS", [
+            Log::debug("Got tenant provider IDs from RDS", [
                 'rds_instance_id' => $rdsInstance->id,
                 'tenant_id' => $tenantId,
-                'integrations' => $result,
+                'provider_ids' => $providerIds,
             ]);
 
         } catch (\Exception $e) {
-            Log::error("Failed to get tenant integrations from RDS {$rdsInstance->id}", [
+            Log::error("Failed to get tenant provider IDs from RDS {$rdsInstance->id}", [
                 'tenant_id' => $tenantId,
                 'error' => $e->getMessage(),
             ]);
         }
 
-        return $result;
+        return $providerIds;
+    }
+
+    /**
+     * Get scheduled commands for a tenant from an RDS instance
+     * Returns commands where provider_id matches tenant's integrations OR provider_id is null
+     * 
+     * @param RdsInstance $rdsInstance
+     * @param int $tenantId RAI tenant_id (not tenant_master_id)
+     * @return \Illuminate\Support\Collection
+     */
+    public function getScheduledCommandsForTenant(RdsInstance $rdsInstance, int $tenantId): \Illuminate\Support\Collection
+    {
+        try {
+            $db = $this->query($rdsInstance);
+
+            // Get provider IDs this tenant has
+            $providerIds = $this->getTenantProviderIds($rdsInstance, $tenantId);
+
+            // Build query for scheduled commands
+            $query = $db->table('scheduled_commands')
+                ->leftJoin('providers', 'scheduled_commands.provider_id', '=', 'providers.id')
+                ->where('scheduled_commands.is_active', true)
+                ->where('scheduled_commands.default_enabled', true)
+                ->select(
+                    'scheduled_commands.id',
+                    'scheduled_commands.command_name',
+                    'scheduled_commands.display_name',
+                    'scheduled_commands.description',
+                    'scheduled_commands.category',
+                    'scheduled_commands.provider_id',
+                    'scheduled_commands.default_params',
+                    'scheduled_commands.requires_tenant',
+                    'scheduled_commands.sort_order',
+                    'providers.name as provider_name'
+                );
+
+            // Filter: provider_id is NULL OR in tenant's provider list
+            $query->where(function ($q) use ($providerIds) {
+                $q->whereNull('scheduled_commands.provider_id');
+                if (!empty($providerIds)) {
+                    $q->orWhereIn('scheduled_commands.provider_id', $providerIds);
+                }
+            });
+
+            $commands = $query->orderBy('scheduled_commands.sort_order')
+                ->orderBy('scheduled_commands.display_name')
+                ->get();
+
+            // Decode default_params JSON
+            foreach ($commands as $command) {
+                $command->default_params = $command->default_params 
+                    ? json_decode($command->default_params, true) 
+                    : [];
+            }
+
+            Log::debug("Got scheduled commands for tenant from RDS", [
+                'rds_instance_id' => $rdsInstance->id,
+                'tenant_id' => $tenantId,
+                'command_count' => $commands->count(),
+            ]);
+
+            return $commands;
+
+        } catch (\Exception $e) {
+            Log::error("Failed to get scheduled commands from RDS {$rdsInstance->id}", [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+            ]);
+            return collect();
+        }
+    }
+
+    /**
+     * Get all providers from an RDS instance
+     * 
+     * @param RdsInstance $rdsInstance
+     * @return \Illuminate\Support\Collection
+     */
+    public function getProviders(RdsInstance $rdsInstance): \Illuminate\Support\Collection
+    {
+        try {
+            return $this->query($rdsInstance)
+                ->table('providers')
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get();
+        } catch (\Exception $e) {
+            Log::error("Failed to get providers from RDS {$rdsInstance->id}", [
+                'error' => $e->getMessage(),
+            ]);
+            return collect();
+        }
+    }
+
+    /**
+     * Get all scheduled commands from an RDS instance (unfiltered)
+     * 
+     * @param RdsInstance $rdsInstance
+     * @return \Illuminate\Support\Collection
+     */
+    public function getAllScheduledCommands(RdsInstance $rdsInstance): \Illuminate\Support\Collection
+    {
+        try {
+            $db = $this->query($rdsInstance);
+
+            $commands = $db->table('scheduled_commands')
+                ->leftJoin('providers', 'scheduled_commands.provider_id', '=', 'providers.id')
+                ->where('scheduled_commands.is_active', true)
+                ->select(
+                    'scheduled_commands.id',
+                    'scheduled_commands.command_name',
+                    'scheduled_commands.display_name',
+                    'scheduled_commands.description',
+                    'scheduled_commands.category',
+                    'scheduled_commands.provider_id',
+                    'scheduled_commands.default_params',
+                    'scheduled_commands.requires_tenant',
+                    'scheduled_commands.default_enabled',
+                    'scheduled_commands.sort_order',
+                    'providers.name as provider_name'
+                )
+                ->orderBy('scheduled_commands.category')
+                ->orderBy('scheduled_commands.sort_order')
+                ->orderBy('scheduled_commands.display_name')
+                ->get();
+
+            // Decode default_params JSON
+            foreach ($commands as $command) {
+                $command->default_params = $command->default_params 
+                    ? json_decode($command->default_params, true) 
+                    : [];
+            }
+
+            return $commands;
+
+        } catch (\Exception $e) {
+            Log::error("Failed to get all scheduled commands from RDS {$rdsInstance->id}", [
+                'error' => $e->getMessage(),
+            ]);
+            return collect();
+        }
     }
 
     /**
      * Check if a table exists in the database
      */
-    protected function tableExists(\Illuminate\Database\Connection $db, string $table): bool
-    {
-        try {
-            return $db->getSchemaBuilder()->hasTable($table);
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
     /**
      * Purge a connection to force reconnection
      */

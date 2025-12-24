@@ -4,10 +4,9 @@ namespace App\Livewire\Admin;
 
 use App\Models\CommandExecution;
 use App\Models\CommandPreset;
-use App\Models\ScheduledCommand;
 use App\Models\TenantMaster;
 use App\Services\CommandAnalyzer;
-use App\Services\TenantIntegrationService;
+use App\Services\RdsConnectionService;
 use Illuminate\Support\Facades\Cookie;
 use Livewire\Component;
 
@@ -408,22 +407,34 @@ class CustomScheduleRunner extends Component
         $tenantMasterId = $this->commandTenantMasterId ?? $this->selectedTenantMasterId;
         
         try {
-            // Load commands filtered by tenant's integrations if tenant is selected
+            $rdsService = app(RdsConnectionService::class);
+            $scheduledCommands = collect();
+            
             if ($tenantMasterId) {
-                $scheduledCommands = ScheduledCommand::getForTenantMaster($tenantMasterId);
+                // Get tenant with RDS instance
+                $tenantMaster = TenantMaster::with('rdsInstance')->find($tenantMasterId);
+                
+                if ($tenantMaster && $tenantMaster->rdsInstance) {
+                    // Query RAI's RDS for commands filtered by tenant's integrations
+                    $scheduledCommands = $rdsService->getScheduledCommandsForTenant(
+                        $tenantMaster->rdsInstance,
+                        $tenantMaster->remote_tenant_id
+                    );
+                }
             } else {
-                // Load all active commands (no tenant filtering)
-                $scheduledCommands = ScheduledCommand::active()
-                    ->orderBy('sort_order')
-                    ->orderBy('display_name')
-                    ->get();
+                // No tenant selected - try to get commands from first available RDS
+                // This is just for showing a command list when no tenant is selected
+                $firstRds = \App\Models\RdsInstance::active()->first();
+                if ($firstRds) {
+                    $scheduledCommands = $rdsService->getAllScheduledCommands($firstRds);
+                }
             }
             
-            // Convert ScheduledCommand models to the format expected by UI
+            // Convert to the format expected by UI
             $this->availableCommands = [];
             foreach ($scheduledCommands as $cmd) {
                 // Get default params and resolve dynamic dates
-                $params = $cmd->default_params ?? [];
+                $params = is_array($cmd->default_params) ? $cmd->default_params : [];
                 
                 // Resolve dynamic dates in params
                 foreach ($params as $key => $value) {
@@ -457,15 +468,17 @@ class CustomScheduleRunner extends Component
                     'display_name' => $cmd->display_name,
                     'description' => $cmd->description ?? '',
                     'category' => $cmd->category ?? 'Other',
+                    'provider_name' => $cmd->provider_name ?? null,
                     'params' => $params,
                     'requires_tenant' => $cmd->requires_tenant ?? true,
                     'retry' => true,
                 ];
             }
         } catch (\Exception $e) {
-            \Log::error("Failed to load commands: " . $e->getMessage(), [
+            \Log::error("Failed to load commands from RDS: " . $e->getMessage(), [
                 'tenant_master_id' => $tenantMasterId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             $this->availableCommands = [];
         }
