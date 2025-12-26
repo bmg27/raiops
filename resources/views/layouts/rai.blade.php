@@ -101,6 +101,12 @@
                 </a>
                 <ul class="dropdown-menu">
                     <li>
+                        @livewire('nav.theme-selector')
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
                         <a class="dropdown-item" href="{{ route('profile.show') }}">
                             <i class="bi-person-circle me-2"></i>
                             Profile

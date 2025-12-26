@@ -2,9 +2,7 @@
 
 namespace App\Livewire\Permissions;
 
-use App\Notifications\UserActivated;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithoutUrlPagination;
@@ -23,9 +21,6 @@ class UsersIndex extends Component
     public string $search = '';
     public string $sortField = 'name';
     public string $sortDirection = 'asc';
-    public $userNotified = false;
-    public $showEmailButton = false;
-    public $user;
 
     // Modal flags
     public bool $showUserModal = false;
@@ -258,49 +253,5 @@ class UsersIndex extends Component
     private function resetForm()
     {
         $this->reset(['userId', 'name', 'email', 'password', 'selectedRoles', 'status', 'modalRoles']);
-    }
-
-    public function updatedStatus($value)
-    {
-        // Whenever the status changes, reset user notification flag
-        if ($value == "Active") {
-            $this->showEmailButton = true;
-            $this->userNotified = false;
-        }
-    }
-
-    public function notifyUser()
-    {
-        if (! $this->user) {
-            $this->dispatch('notify', type: 'error', message: 'User not found');
-            return;
-        }
-
-        $activatedUser = $this->user;
-
-        // Fetch all users in the Admin & Super Admin roles
-        $wanted = ['Admin', 'Super Admin'];
-        $roles = Role::whereIn('name', $wanted)->get();
-
-        if ($roles->isEmpty()) {
-            $roleRecipients = collect();
-        } else {
-            $roleRecipients = User::whereHas('roles', function($q) use ($roles) {
-                $q->whereIn('id', $roles->pluck('id'));
-            })->get();
-        }
-
-        // Include the activated user too (and dedupe)
-        $allRecipients = $roleRecipients
-            ->push($activatedUser)
-            ->unique('id')
-            ->values();
-
-        // Send the notification
-        Notification::send($allRecipients, new UserActivated($activatedUser));
-
-        $this->userNotified = true;
-        $this->showEmailButton = false;
-        $this->dispatch('notify', type: 'success', message: 'User has been notified.');
     }
 }
