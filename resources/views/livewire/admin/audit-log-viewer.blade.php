@@ -135,7 +135,7 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th style="width: 160px;">Timestamp</th>
                             <th style="width: 120px;">Action</th>

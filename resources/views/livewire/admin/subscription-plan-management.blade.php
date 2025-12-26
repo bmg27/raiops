@@ -84,7 +84,7 @@
                                                 <span class="badge bg-secondary-subtle text-body small">{{ $feature }}</span>
                                             @endforeach
                                             @if(count($plan->features) > 2)
-                                                <span class="badge bg-light text-dark small">+{{ count($plan->features) - 2 }} more</span>
+                                                <span class="badge bg-secondary-subtle text-body small">+{{ count($plan->features) - 2 }} more</span>
                                             @endif
                                         </div>
                                     @endif
