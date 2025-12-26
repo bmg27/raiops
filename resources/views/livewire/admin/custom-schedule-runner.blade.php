@@ -172,7 +172,7 @@
                             </div>
 
                             @if($execution->current_step)
-                                <div class="bg-white rounded p-2 mb-2">
+                                <div class="bg-body-secondary rounded p-2 mb-2">
                                     <i class="bi bi-arrow-right-circle text-primary me-1"></i>
                                     <strong>Running:</strong> <code>{{ $execution->current_step }}</code>
                                 </div>
@@ -252,26 +252,26 @@
                         </h5>
                         <div class="d-flex align-items-center gap-2">
                             <div class="input-group input-group-sm" style="width: 250px;">
-                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="text" class="form-control" placeholder="Search commands..." wire:model.live.debounce.300ms="commandSearchQuery">
                                 @if($commandSearchQuery)
-                                    <button class="btn btn-outline-light" type="button" wire:click="$set('commandSearchQuery', '')">
+                                    <button class="btn btn-outline-secondary" type="button" wire:click="$set('commandSearchQuery', '')">
                                         <i class="bi bi-x"></i>
                                     </button>
                                 @endif
                             </div>
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-light" wire:click="expandAllCategories" title="Expand All">
+                                <button class="btn btn-outline-secondary" wire:click="expandAllCategories" title="Expand All">
                                     <i class="bi bi-arrows-expand"></i>
                                 </button>
-                                <button class="btn btn-outline-light" wire:click="collapseAllCategories" title="Collapse All">
+                                <button class="btn btn-outline-secondary" wire:click="collapseAllCategories" title="Collapse All">
                                     <i class="bi bi-arrows-collapse"></i>
                                 </button>
                             </div>
-                            <button wire:click="selectAllCommands" class="btn btn-sm btn-outline-light">
+                            <button wire:click="selectAllCommands" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-check-all"></i> All
                             </button>
-                            <button wire:click="deselectAllCommands" class="btn btn-sm btn-outline-light">
+                            <button wire:click="deselectAllCommands" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-x-lg"></i> None
                             </button>
                         </div>
@@ -280,7 +280,7 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
                                     <th style="width: 50px;">
                                         <input

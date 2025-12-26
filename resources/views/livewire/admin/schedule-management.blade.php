@@ -99,7 +99,7 @@
             @else
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th style="width: 40px;">On</th>
                                 <th>Command</th>
@@ -150,7 +150,7 @@
                                     </td>
                                     <td>
                                         @if($cmd->provider_name)
-                                            <span class="badge bg-light text-dark">{{ $cmd->provider_name }}</span>
+                                            <span class="badge bg-secondary-subtle text-body">{{ $cmd->provider_name }}</span>
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
@@ -204,7 +204,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Command</label>
-                            <code class="d-block p-2 bg-light rounded">{{ $editingCommand->command_name }}</code>
+                            <code class="d-block p-2 bg-body-secondary rounded">{{ $editingCommand->command_name }}</code>
                         </div>
 
                         @if($editingCommand->description)

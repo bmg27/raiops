@@ -216,7 +216,7 @@
                                 </div>
 
                                 <!-- Price Summary -->
-                                <div class="border rounded p-3 bg-light mb-3">
+                                <div class="border rounded p-3 bg-body-secondary mb-3">
                                     <strong>Price Summary:</strong>
                                     <ul class="mb-0 mt-2">
                                         <li>Base Price: ${{ number_format($selectedPlanConfig['base_price'], 2) }}/month</li>
@@ -924,7 +924,7 @@
                         </div>
 
                         <!-- Price Summary -->
-                        <div class="border rounded p-3 bg-light">
+                        <div class="border rounded p-3 bg-body-secondary">
                             <strong>Price Summary:</strong>
                             <ul class="mb-0 mt-2">
                                 <li>Base Price: ${{ number_format($selectedPlanConfig['base_price'], 2) }}/month</li>

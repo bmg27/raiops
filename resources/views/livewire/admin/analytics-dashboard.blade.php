@@ -233,7 +233,7 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Tenant</th>
@@ -333,7 +333,7 @@
                                             ({{ $billing->daysUntilBilling() }} days)
                                         </small>
                                     </div>
-                                    <span class="badge bg-light text-dark">${{ number_format($billing->mrr, 2) }}</span>
+                                    <span class="badge bg-secondary-subtle text-body">${{ number_format($billing->mrr, 2) }}</span>
                                 </div>
                             @endforeach
                         </div>

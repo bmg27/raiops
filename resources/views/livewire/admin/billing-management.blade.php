@@ -130,7 +130,7 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>Tenant</th>
                             <th>Plan</th>
@@ -153,7 +153,7 @@
                                 </td>
                                 <td>
                                     @if($billing->subscriptionPlan)
-                                        <span class="badge bg-light text-dark">
+                                        <span class="badge bg-secondary-subtle text-body">
                                             {{ $billing->subscriptionPlan->name }}
                                         </span>
                                     @else

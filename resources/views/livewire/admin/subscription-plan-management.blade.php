@@ -56,7 +56,7 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th style="width: 50px;">Order</th>
                             <th>Plan</th>
@@ -81,7 +81,7 @@
                                     @if($plan->features && count($plan->features) > 0)
                                         <div class="mt-1">
                                             @foreach(array_slice($plan->features, 0, 2) as $feature)
-                                                <span class="badge bg-light text-dark small">{{ $feature }}</span>
+                                                <span class="badge bg-secondary-subtle text-body small">{{ $feature }}</span>
                                             @endforeach
                                             @if(count($plan->features) > 2)
                                                 <span class="badge bg-light text-dark small">+{{ count($plan->features) - 2 }} more</span>

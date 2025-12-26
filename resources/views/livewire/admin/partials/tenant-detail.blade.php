@@ -253,7 +253,7 @@
                                     'Active' => 'bg-success',
                                     'Pending' => 'bg-warning text-dark',
                                     'Disabled', 'Archived' => 'bg-secondary',
-                                    default => 'bg-light text-dark border',
+                                    default => 'bg-secondary-subtle text-body border',
                                 };
                             @endphp
                             <tr>

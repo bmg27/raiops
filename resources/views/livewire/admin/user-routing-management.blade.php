@@ -83,7 +83,7 @@
     {{-- STATS ROW --}}
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
-            <div class="card bg-light h-100">
+            <div class="card bg-body-secondary h-100">
                 <div class="card-body text-center">
                     <i class="bi bi-envelope fs-1 text-primary"></i>
                     <h3 class="mb-0">{{ number_format($stats['total']) }}</h3>
@@ -92,7 +92,7 @@
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card bg-light h-100">
+            <div class="card bg-body-secondary h-100">
                 <div class="card-body text-center">
                     <i class="bi bi-database fs-1 text-success"></i>
                     <h3 class="mb-0">{{ $stats['by_rds']->count() }}</h3>
@@ -101,7 +101,7 @@
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card bg-light h-100">
+            <div class="card bg-body-secondary h-100">
                 <div class="card-body text-center">
                     @if($masterRds)
                         <i class="bi bi-hdd-network fs-1 text-warning"></i>
@@ -191,7 +191,7 @@
                                             {{ $entry->tenantMaster->rdsInstance->name }}
                                         </span>
                                     @else
-                                        <span class="badge bg-light text-dark border">Unknown</span>
+                                        <span class="badge bg-secondary-subtle text-body border">Unknown</span>
                                     @endif
                                 </td>
                                 <td class="d-none d-md-table-cell">
@@ -255,7 +255,7 @@
                 <div class="row">
                     @foreach($stats['by_rds'] as $stat)
                         <div class="col-md-4 col-6 mb-3">
-                            <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                            <div class="d-flex justify-content-between align-items-center p-2 bg-body-secondary rounded">
                                 <span>
                                     <i class="bi bi-database me-2"></i>
                                     {{ $stat->rds_name }}

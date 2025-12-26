@@ -135,7 +135,7 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
                                     <th>Instance</th>
                                     <th class="text-center">Status</th>
@@ -183,7 +183,7 @@
                                             @endswitch
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-light text-dark">
+                                            <span class="badge bg-secondary-subtle text-body">
                                                 {{ $rds->tenants_count }}
                                             </span>
                                         </td>

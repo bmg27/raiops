@@ -87,7 +87,7 @@
                                 </td>
                                 <td>
                                 <span
-                                    class="badge rounded-pill border border-secondary text-secondary bg-white fw-normal">
+                                    class="badge rounded-pill border border-secondary text-secondary bg-body fw-normal">
                                         <i class="bi {{ $badge }} me-1"></i>
                                         {{ $tLabel }}
                                     </span>

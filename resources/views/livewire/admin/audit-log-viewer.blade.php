@@ -179,12 +179,12 @@
                                 </td>
                                 <td>
                                     @if($log->tenant)
-                                        <span class="badge bg-light text-dark me-1">
+                                        <span class="badge bg-secondary-subtle text-body me-1">
                                             <i class="bi bi-building me-1"></i>{{ $log->tenant->name }}
                                         </span>
                                     @endif
                                     @if($log->rdsInstance)
-                                        <span class="badge bg-light text-dark">
+                                        <span class="badge bg-secondary-subtle text-body">
                                             <i class="bi bi-database me-1"></i>{{ $log->rdsInstance->name }}
                                         </span>
                                     @endif
@@ -282,12 +282,12 @@
                                 <div class="col-md-6">
                                     <h6 class="text-muted mb-2">Context</h6>
                                     @if($selectedLogDetails['tenant_name'])
-                                        <span class="badge bg-light text-dark">
+                                        <span class="badge bg-secondary-subtle text-body">
                                             <i class="bi bi-building me-1"></i>{{ $selectedLogDetails['tenant_name'] }}
                                         </span>
                                     @endif
                                     @if($selectedLogDetails['rds_name'])
-                                        <span class="badge bg-light text-dark">
+                                        <span class="badge bg-secondary-subtle text-body">
                                             <i class="bi bi-database me-1"></i>{{ $selectedLogDetails['rds_name'] }}
                                         </span>
                                     @endif
@@ -302,7 +302,7 @@
                             <h6 class="text-muted mb-3"><i class="bi bi-file-diff me-2"></i>Changes</h6>
                             <div class="table-responsive">
                                 <table class="table table-sm table-bordered">
-                                    <thead class="table-light">
+                                    <thead>
                                         <tr>
                                             <th style="width: 25%;">Field</th>
                                             <th style="width: 37.5%;">Old Value</th>
@@ -334,7 +334,7 @@
                             </div>
                         @elseif($selectedLogDetails['new_values'])
                             <h6 class="text-muted mb-3"><i class="bi bi-code-square me-2"></i>Data</h6>
-                            <pre class="bg-light p-3 rounded small"><code>{{ json_encode($selectedLogDetails['new_values'], JSON_PRETTY_PRINT) }}</code></pre>
+                            <pre class="bg-body-secondary p-3 rounded small"><code>{{ json_encode($selectedLogDetails['new_values'], JSON_PRETTY_PRINT) }}</code></pre>
                         @else
                             <p class="text-muted text-center py-3">No detailed change data available.</p>
                         @endif

@@ -128,7 +128,7 @@
                                         </span>
                                     </td>
                                     <td class="text-center d-none d-md-table-cell">
-                                        <span class="badge bg-light text-dark border">
+                                        <span class="badge bg-secondary-subtle text-body border">
                                             <i class="bi bi-people me-1"></i>
                                             {{ $tenant->cached_user_count ?? '—' }}
                                         </span>
@@ -136,7 +136,7 @@
                                     <td class="text-center d-none d-md-table-cell">
                                         <a href="#" 
                                            wire:click.prevent="viewDetails({{ $tenant->id }})"
-                                           class="badge bg-light text-dark border text-decoration-none cursor-pointer"
+                                           class="badge bg-secondary-subtle text-body border text-decoration-none cursor-pointer"
                                            title="Click to manage locations">
                                             <i class="bi bi-building me-1"></i>
                                             {{ $tenant->cached_location_count ?? '—' }}
@@ -212,7 +212,7 @@
         {{-- SUMMARY STATS --}}
         <div class="row mt-4">
             <div class="col-md-6">
-                <div class="card bg-light">
+                <div class="card bg-body-secondary">
                     <div class="card-body">
                         <h6 class="card-title text-muted mb-2">
                             <i class="bi bi-database me-2"></i>RDS Overview
@@ -232,7 +232,7 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card bg-light">
+                <div class="card bg-body-secondary">
                     <div class="card-body">
                         <h6 class="card-title text-muted mb-2">
                             <i class="bi bi-pie-chart me-2"></i>Status Breakdown
