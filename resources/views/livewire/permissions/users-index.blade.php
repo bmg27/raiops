@@ -60,7 +60,7 @@
                         <tbody>
                         @forelse($users as $u)
                             @php
-                                $status = $u->is_active ? 'Active' : 'Disabled';
+                                $status = $u->status ?? 'Active';
                                 $badge = $statusMap[$status] ?? ['icon' => 'bi-question-circle text-secondary', 'label' => $status];
                             @endphp
 

@@ -85,7 +85,7 @@ class UsersIndex extends Component
                         });
                 });
             })
-            ->when($this->userStatus, fn($q) => $q->where('is_active', $this->userStatus === 'Active' ? 1 : 0))
+            ->when($this->userStatus, fn($q) => $q->where('status', $this->userStatus))
             ->orderBy($this->sortField, $this->sortDirection);
 
         return $query;
@@ -112,7 +112,7 @@ class UsersIndex extends Component
             $this->userId = $user->id;
             $this->name = $user->name;
             $this->email = $user->email;
-            $this->status = $user->is_active ? 'Active' : 'Disabled';
+            $this->status = $user->status ?? 'Active';
             $this->selectedRoles = $user->roles->pluck('id')->map(fn($id) => (string)$id)->toArray();
         }
 
@@ -150,14 +150,14 @@ class UsersIndex extends Component
             $user = User::findOrFail($this->userId);
             $user->name = $this->name;
             $user->email = $this->email;
-            $user->is_active = $this->status === 'Active';
+            $user->status = $this->status;
             $user->save();
         } else {
             // Create mode
             $user = User::create([
                 'name' => $this->name,
                 'email' => $this->email,
-                'is_active' => $this->status === 'Active',
+                'status' => $this->status,
                 'password' => bcrypt('password'), // Default password, user should change on first login
             ]);
         }
@@ -180,7 +180,7 @@ class UsersIndex extends Component
     {
         if ($id) {
             $user = User::findOrFail($id);
-            $user->is_active = false;
+            $user->status = 'Disabled';
             $user->save();
             $this->dispatch('notify', type: 'success', message: 'User disabled!');
         }
