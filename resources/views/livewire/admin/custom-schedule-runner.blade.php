@@ -250,20 +250,37 @@
                             <i class="bi bi-list-check me-2"></i>
                             Select & Configure Commands
                         </h5>
-                        <div>
-                            <button wire:click="selectAllCommands" class="btn btn-sm btn-outline-light me-2">
-                                <i class="bi bi-check-all"></i> Select All
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="input-group input-group-sm" style="width: 250px;">
+                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" placeholder="Search commands..." wire:model.live.debounce.300ms="commandSearchQuery">
+                                @if($commandSearchQuery)
+                                    <button class="btn btn-outline-light" type="button" wire:click="$set('commandSearchQuery', '')">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                @endif
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-light" wire:click="expandAllCategories" title="Expand All">
+                                    <i class="bi bi-arrows-expand"></i>
+                                </button>
+                                <button class="btn btn-outline-light" wire:click="collapseAllCategories" title="Collapse All">
+                                    <i class="bi bi-arrows-collapse"></i>
+                                </button>
+                            </div>
+                            <button wire:click="selectAllCommands" class="btn btn-sm btn-outline-light">
+                                <i class="bi bi-check-all"></i> All
                             </button>
                             <button wire:click="deselectAllCommands" class="btn btn-sm btn-outline-light">
-                                <i class="bi bi-x-lg"></i> Deselect All
+                                <i class="bi bi-x-lg"></i> None
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
                                 <tr>
                                     <th style="width: 50px;">
                                         <input
@@ -273,7 +290,6 @@
                                             @if(count($selectedCommands) === count($availableCommands)) checked @endif>
                                     </th>
                                     <th>Command</th>
-                                    <th>Category</th>
                                     <th>Description</th>
                                     <th>Parameters</th>
                                     <th style="width: 80px;" class="text-center">Retry?</th>
@@ -282,17 +298,43 @@
                             </thead>
                             <tbody>
                                 @php
-                                    $categories = collect($availableCommands)->map(function($cmd, $idx) {
-                                        return array_merge($cmd, ['original_index' => $idx]);
+                                    $filteredCommands = $this->getFilteredAvailableCommands();
+                                    $categories = $filteredCommands->map(function($cmd, $idx) use ($availableCommands) {
+                                        // Find original index in availableCommands
+                                        $originalIdx = collect($availableCommands)->search(function($item) use ($cmd) {
+                                            return ($item['command'] ?? '') === ($cmd['command'] ?? '');
+                                        });
+                                        return array_merge($cmd, ['original_index' => $originalIdx !== false ? $originalIdx : $idx]);
                                     })->groupBy('category');
                                 @endphp
 
-                                @foreach($categories as $category => $commands)
+                                @if($filteredCommands->isEmpty())
                                     <tr>
-                                        <td colspan="7" class="fw-bold bg-light">
-                                            <i class="bi bi-folder2-open me-2"></i>{{ $category ?: 'General' }}
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            <i class="bi bi-search me-2"></i>No commands match "{{ $commandSearchQuery }}"
                                         </td>
                                     </tr>
+                                @endif
+
+                                @foreach($categories as $category => $commands)
+                                    @php $isCollapsed = in_array($category, $collapsedCategories); @endphp
+                                    <tr class="table-secondary" style="cursor: pointer;" wire:click="toggleCommandCategory('{{ $category }}')">
+                                        <td colspan="6" class="fw-bold py-2">
+                                            <i class="bi bi-chevron-{{ $isCollapsed ? 'right' : 'down' }} me-1"></i>
+                                            <i class="bi bi-folder{{ $isCollapsed ? '' : '-open' }} me-2"></i>
+                                            {{ $category ?: 'General' }}
+                                            <span class="badge bg-secondary ms-2">{{ $commands->count() }}</span>
+                                            @php
+                                                $selectedInCategory = $commands->filter(function($cmd) use ($selectedCommands) {
+                                                    return in_array($cmd['original_index'], $selectedCommands);
+                                                })->count();
+                                            @endphp
+                                            @if($selectedInCategory > 0)
+                                                <span class="badge bg-primary ms-1">{{ $selectedInCategory }} selected</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @if(!$isCollapsed)
                                     @foreach($commands as $cmd)
                                         @php
                                             $cmdIndex = $cmd['original_index'];
@@ -309,21 +351,16 @@
                                             <td>
                                                 <code class="text-primary">{{ $cmd['command'] }}</code>
                                             </td>
-                                            <td>
-                                                <span class="badge bg-secondary">{{ $cmd['category'] ?? 'General' }}</span>
-                                            </td>
-                                            <td>{{ $cmd['description'] ?? '' }}</td>
+                                            <td>{{ Str::limit($cmd['description'] ?? '', 50) }}</td>
                                             <td>
                                                 @if(isset($cmd['params']) && !empty($cmd['params']))
                                                     @foreach($cmd['params'] as $key => $value)
                                                         <span class="badge bg-info me-1">
-                                                            {{ $key }}@if(!is_bool($value))
-                                                                ={{ $value }}
-                                                            @endif
+                                                            {{ ltrim($key, '-') }}@if(!is_bool($value))={{ Str::limit($value, 15) }}@endif
                                                         </span>
                                                     @endforeach
                                                 @else
-                                                    <span class="text-muted small">No parameters</span>
+                                                    <span class="text-muted small">—</span>
                                                 @endif
                                             </td>
                                             <td class="text-center">
@@ -334,19 +371,22 @@
                                                     title="Retry on failure">
                                             </td>
                                             <td>
-                                                <button class="btn btn-sm p-0 bg-transparent border-0 text-secondary"
+                                                <button class="btn btn-sm btn-outline-secondary"
                                                         type="button"
                                                         wire:click="openParameterModal({{ $cmdIndex }})"
                                                         title="Customize Parameters">
-                                                    <i class="bi bi-three-dots"></i>
+                                                    <i class="bi bi-sliders"></i>
                                                 </button>
                                             </td>
                                         </tr>
                                     @endforeach
+                                    @endif
                                 @endforeach
-                                @if(count($availableCommands) === 0)
+                                @if(count($availableCommands) === 0 && !$commandSearchQuery)
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted">No commands available</td>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            <i class="bi bi-inbox me-2"></i>No commands available for this tenant
+                                        </td>
                                     </tr>
                                 @endif
                             </tbody>

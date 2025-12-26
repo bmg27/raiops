@@ -39,8 +39,17 @@ class MenuServiceDatabase
                 'type' => 'link',
                 'id' => 10,
                 'url' => '/admin/schedule-runner',
-                'icon' => 'calendar-check',
+                'icon' => 'calendar2-heart',
                 'title' => 'Schedule Runner',
+                'permission_name' => 'schedule.run',
+            ],
+            [
+                'type' => 'link',
+                'id' => 15,
+                'url' => '/admin/schedule-management',
+                'icon' => 'calendar-check',
+                'title' => 'Schedule Management',
+                'permission_name' => 'schedule.manage',
             ],
             [
                 'type' => 'link',

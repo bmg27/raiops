@@ -24,6 +24,8 @@ class CustomScheduleRunner extends Component
     public $availableCommands = [];
     public $selectedCommands = [];
     public $showCommandSelector = false;
+    public $commandSearchQuery = '';
+    public $collapsedCategories = [];
 
     // Execution history
     public $executionHistory = [];
@@ -85,6 +87,7 @@ class CustomScheduleRunner extends Component
     public function switchTab($tab)
     {
         $this->activeTab = $tab;
+        $this->commandSearchQuery = ''; // Reset search when switching tabs
         $this->showCommandSelector = false;
         $this->showPresetsListModal = false;
         $this->showPresetFormModal = false;
@@ -636,6 +639,46 @@ class CustomScheduleRunner extends Component
     public function toggleOutput()
     {
         $this->outputExpanded = !$this->outputExpanded;
+    }
+
+    public function toggleCommandCategory($category)
+    {
+        if (in_array($category, $this->collapsedCategories)) {
+            $this->collapsedCategories = array_values(array_diff($this->collapsedCategories, [$category]));
+        } else {
+            $this->collapsedCategories[] = $category;
+        }
+    }
+
+    public function expandAllCategories()
+    {
+        $this->collapsedCategories = [];
+    }
+
+    public function collapseAllCategories()
+    {
+        $this->collapsedCategories = collect($this->availableCommands)->pluck('category')->unique()->filter()->values()->toArray();
+    }
+
+    public function getFilteredAvailableCommands()
+    {
+        $commands = collect($this->availableCommands);
+        
+        if ($this->commandSearchQuery) {
+            $search = strtolower($this->commandSearchQuery);
+            $commands = $commands->filter(function ($cmd) use ($search) {
+                return str_contains(strtolower($cmd['display_name'] ?? ''), $search) ||
+                       str_contains(strtolower($cmd['command'] ?? ''), $search) ||
+                       str_contains(strtolower($cmd['description'] ?? ''), $search);
+            });
+        }
+        
+        return $commands;
+    }
+
+    public function getCommandCategories()
+    {
+        return collect($this->availableCommands)->pluck('category')->unique()->filter()->sort()->values();
     }
 
     private function isDateParameter($name): bool

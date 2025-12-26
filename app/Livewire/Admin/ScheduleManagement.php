@@ -29,6 +29,8 @@ class ScheduleManagement extends Component
     public $filterCategory = '';
     public $filterFrequency = '';
     public $showDisabled = true;
+    public $searchQuery = '';
+    public $collapsedCategories = [];
 
     protected RdsConnectionService $rdsService;
 
@@ -118,6 +120,41 @@ class ScheduleManagement extends Component
     public function getCategories()
     {
         return collect($this->commands)->pluck('category')->unique()->filter()->sort()->values();
+    }
+
+    public function toggleCategory($category)
+    {
+        if (in_array($category, $this->collapsedCategories)) {
+            $this->collapsedCategories = array_values(array_diff($this->collapsedCategories, [$category]));
+        } else {
+            $this->collapsedCategories[] = $category;
+        }
+    }
+
+    public function expandAll()
+    {
+        $this->collapsedCategories = [];
+    }
+
+    public function collapseAll()
+    {
+        $this->collapsedCategories = $this->getCategories()->toArray();
+    }
+
+    public function getFilteredCommands()
+    {
+        $commands = collect($this->commands);
+        
+        if ($this->searchQuery) {
+            $search = strtolower($this->searchQuery);
+            $commands = $commands->filter(function ($cmd) use ($search) {
+                return str_contains(strtolower($cmd->display_name), $search) ||
+                       str_contains(strtolower($cmd->command_name), $search) ||
+                       str_contains(strtolower($cmd->description ?? ''), $search);
+            });
+        }
+        
+        return $commands;
     }
 
     public function openEditModal($commandId)

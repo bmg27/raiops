@@ -7,17 +7,29 @@
     <div class="card mb-3">
         <div class="card-body">
             <div class="row g-3 align-items-end">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small text-muted">RDS Instance</label>
-                    <select class="form-select" wire:model.live="selectedRdsId">
+                    <select class="form-select form-select-sm" wire:model.live="selectedRdsId">
                         @foreach($rdsInstances as $rds)
                             <option value="{{ $rds->id }}">{{ $rds->name }}</option>
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Search Commands</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Search by name or command..." wire:model.live.debounce.300ms="searchQuery">
+                        @if($searchQuery)
+                            <button class="btn btn-outline-secondary" type="button" wire:click="$set('searchQuery', '')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
                 <div class="col-md-2">
                     <label class="form-label small text-muted">Category</label>
-                    <select class="form-select" wire:model.live="filterCategory">
+                    <select class="form-select form-select-sm" wire:model.live="filterCategory">
                         <option value="">All Categories</option>
                         @foreach($categories as $cat)
                             <option value="{{ $cat }}">{{ $cat }}</option>
@@ -26,53 +38,51 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-muted">Frequency</label>
-                    <select class="form-select" wire:model.live="filterFrequency">
+                    <select class="form-select form-select-sm" wire:model.live="filterFrequency">
                         <option value="">All Frequencies</option>
                         @foreach($frequencies as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="showDisabled" wire:model.live="showDisabled">
-                        <label class="form-check-label" for="showDisabled">Show Disabled</label>
-                    </div>
-                </div>
                 <div class="col-md-3 text-end">
-                    @if($filterCategory)
-                        <div class="dropdown d-inline-block">
-                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-lightning me-1"></i>Bulk Set Frequency
-                            </button>
-                            <ul class="dropdown-menu">
-                                @foreach($frequencies as $key => $label)
-                                    <li>
-                                        <a class="dropdown-item" href="#" wire:click.prevent="bulkSetFrequency('{{ $key }}')">
-                                            {{ $label }}
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
+                    <div class="btn-group btn-group-sm me-2">
+                        <button class="btn btn-outline-secondary" wire:click="expandAll" title="Expand All">
+                            <i class="bi bi-arrows-expand"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" wire:click="collapseAll" title="Collapse All">
+                            <i class="bi bi-arrows-collapse"></i>
+                        </button>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" class="form-check-input" id="showDisabled" wire:model.live="showDisabled">
+                        <label class="form-check-label small" for="showDisabled">Disabled</label>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- FREQUENCY LEGEND --}}
+    {{-- FREQUENCY LEGEND & SEARCH INFO --}}
     <div class="card mb-3">
         <div class="card-body py-2">
-            <div class="d-flex flex-wrap gap-3 align-items-center">
-                <span class="text-muted small me-2">Frequencies:</span>
-                <span class="badge bg-danger">Hourly</span>
-                <span class="badge bg-warning text-dark">2 Hours</span>
-                <span class="badge bg-info text-dark">4 Hours</span>
-                <span class="badge bg-primary">6 Hours</span>
-                <span class="badge bg-secondary">12 Hours</span>
-                <span class="badge bg-success">Daily</span>
-                <span class="badge bg-dark">Weekly</span>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <span class="text-muted small me-2">Frequencies:</span>
+                    <span class="badge bg-danger">Hourly</span>
+                    <span class="badge bg-warning text-dark">2 Hours</span>
+                    <span class="badge bg-info text-dark">4 Hours</span>
+                    <span class="badge bg-primary">6 Hours</span>
+                    <span class="badge bg-secondary">12 Hours</span>
+                    <span class="badge bg-success">Daily</span>
+                    <span class="badge bg-dark">Weekly</span>
+                </div>
+                @if($searchQuery)
+                    <div class="text-muted small">
+                        <i class="bi bi-filter me-1"></i>
+                        Showing {{ $this->getFilteredCommands()->count() }} of {{ count($commands) }} commands
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -80,19 +90,19 @@
     {{-- COMMANDS TABLE --}}
     <div class="card">
         <div class="card-body">
-            @if(empty($commands))
+            @php $filteredCommands = $this->getFilteredCommands(); @endphp
+            @if($filteredCommands->isEmpty())
                 <div class="text-center text-muted py-5">
                     <i class="bi bi-inbox display-4"></i>
-                    <p class="mt-2">No commands found</p>
+                    <p class="mt-2">{{ $searchQuery ? 'No commands match your search' : 'No commands found' }}</p>
                 </div>
             @else
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+                    <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 40px;">On</th>
                                 <th>Command</th>
-                                <th>Category</th>
                                 <th>Provider</th>
                                 <th style="width: 150px;">Frequency</th>
                                 <th style="width: 80px;">Actions</th>
@@ -100,15 +110,23 @@
                         </thead>
                         <tbody>
                             @php $currentCategory = null; @endphp
-                            @foreach($commands as $cmd)
+                            @foreach($filteredCommands as $cmd)
                                 @if($currentCategory !== $cmd->category)
-                                    @php $currentCategory = $cmd->category; @endphp
-                                    <tr class="table-secondary">
-                                        <td colspan="6" class="fw-bold small text-uppercase">
-                                            <i class="bi bi-folder me-1"></i>{{ $cmd->category ?? 'Uncategorized' }}
+                                    @php 
+                                        $currentCategory = $cmd->category;
+                                        $isCollapsed = in_array($currentCategory, $collapsedCategories);
+                                        $categoryCommands = $filteredCommands->where('category', $currentCategory);
+                                    @endphp
+                                    <tr class="table-secondary" style="cursor: pointer;" wire:click="toggleCategory('{{ $currentCategory }}')">
+                                        <td colspan="5" class="fw-bold small text-uppercase py-2">
+                                            <i class="bi bi-chevron-{{ $isCollapsed ? 'right' : 'down' }} me-1"></i>
+                                            <i class="bi bi-folder{{ $isCollapsed ? '' : '-open' }} me-1"></i>
+                                            {{ $currentCategory ?? 'Uncategorized' }}
+                                            <span class="badge bg-secondary ms-2">{{ $categoryCommands->count() }}</span>
                                         </td>
                                     </tr>
                                 @endif
+                                @if(!in_array($cmd->category, $collapsedCategories))
                                 <tr class="{{ !$cmd->schedule_enabled ? 'text-muted' : '' }}">
                                     <td>
                                         <div class="form-check form-switch">
@@ -129,9 +147,6 @@
                                         @if($cmd->description)
                                             <div class="small text-muted">{{ Str::limit($cmd->description, 60) }}</div>
                                         @endif
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-light text-dark">{{ $cmd->category }}</span>
                                     </td>
                                     <td>
                                         @if($cmd->provider_name)
@@ -163,6 +178,7 @@
                                         </button>
                                     </td>
                                 </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>
