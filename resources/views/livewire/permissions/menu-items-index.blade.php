@@ -33,12 +33,6 @@
                         Super Admin Only
                     </label>
                 </div>
-                <div class="form-check form-switch d-inline-block me-3">
-                    <input class="form-check-input" type="checkbox" id="showTenantSpecific" wire:model.live="showTenantSpecific">
-                    <label class="form-check-label" for="showTenantSpecific">
-                        Tenant Specific
-                    </label>
-                </div>
                 <a href="#" class="btn btn-primary btn-sm" id="contextualAddBtn" wire:click="openModal">
                     <i class="bi bi-plus-lg me-1"></i> Menu Item
                 </a>
@@ -61,7 +55,6 @@
                             <th wire:click="sortBy('active')" style="cursor:pointer;">Active</th>
                             <th wire:click="sortBy('parent')" style="cursor:pointer;">Parent</th>
                             <th wire:click="sortBy('permission')" style="cursor:pointer;">Permission</th>
-                            <th wire:click="sortBy('tenant_specific')" style="cursor:pointer;">Tenant Specific</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
@@ -113,21 +106,6 @@
                                         <small class="text-muted">None</small>
                                     @endif
                                 </td>
-                                <td class="text-center">
-                                    @if($item->tenant_specific)
-                                        <span class="badge rounded-pill border border-secondary text-secondary bg-white fw-normal"
-                                              style="cursor: pointer;"
-                                              wire:click="openTenantAccessModal({{ $item->id }})"
-                                              title="Click to manage tenant access">
-                                            <i class="bi bi-check-square text-secondary @if($item->tenants->count() > 0) me-1 @endif"></i>
-                                            @if($item->tenants->count() > 0)
-                                                {{ $item->tenants->count() }}
-                                            @endif
-                                        </span>
-                                    @else
-                                        <span class="text-muted small">—</span>
-                                    @endif
-                                </td>
                                 <td class="text-center position-static">
                                     <div class="text-end">
                                         <div class="dropdown position-static">
@@ -138,10 +116,6 @@
                                             <ul class="dropdown-menu dropdown-menu-end position-absolute">
                                                 <li><a class="dropdown-item" href="#"
                                                        wire:click="openModal({{ $item->id }})">Edit</a></li>
-                                                @if($item->tenant_specific)
-                                                <li><a class="dropdown-item" href="#"
-                                                       wire:click="openTenantAccessModal({{ $item->id }})">Manage Tenant Access</a></li>
-                                                @endif
                                                 <li><a class="dropdown-item" href="#"
                                                        wire:click="confirmDelete({{ $item->id }})">Delete</a></li>
                                             </ul>
@@ -317,19 +291,6 @@
                             </div>
                             @endif
 
-                            <!-- Tenant Specific -->
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="tenant_specific" wire:model="tenant_specific">
-                                    <label class="form-check-label" for="tenant_specific">
-                                        <strong>Tenant Specific</strong>
-                                    </label>
-                                </div>
-                                <small class="form-text text-muted d-block mt-1">
-                                    <i class="bi bi-info-circle text-info me-1"></i>
-                                    When checked, this menu item will only be available to tenants that are explicitly granted access. If unchecked, all tenants will have access by default.
-                                </small>
-                            </div>
 
                         </div> <!-- end .modal-body -->
 
