@@ -76,66 +76,15 @@ class SeedRaiOpsMenuItems extends Seeder
             'super_admin_only' => false,
         ]);
         
-        // Level 2: Children under Admin
-        $userManagementChild = MenuItem::create([
+        // Level 2: Children under Admin - User Management (direct link)
+        MenuItem::create([
             'menu_id' => $menu->id,
             'title' => 'User Management',
-            'url' => '#',
+            'url' => '/um',
+            'route' => 'manage.index',
             'parent_id' => $adminParent->id,
             'icon' => 'people',
             'order' => 10,
-            'active' => 1,
-            'super_admin_only' => false,
-        ]);
-        
-        // Level 3: Grandchildren under User Management
-        MenuItem::create([
-            'menu_id' => $menu->id,
-            'title' => 'Users',
-            'url' => '/um',
-            'route' => 'manage.index',
-            'parent_id' => $userManagementChild->id,
-            'icon' => 'person',
-            'order' => 10,
-            'active' => 1,
-            'permission_id' => $getPermissionId('user.manage'),
-            'super_admin_only' => false,
-        ]);
-        
-        MenuItem::create([
-            'menu_id' => $menu->id,
-            'title' => 'Roles',
-            'url' => '/um',
-            'route' => 'manage.index',
-            'parent_id' => $userManagementChild->id,
-            'icon' => 'shield-check',
-            'order' => 20,
-            'active' => 1,
-            'permission_id' => $getPermissionId('user.manage'),
-            'super_admin_only' => false,
-        ]);
-        
-        MenuItem::create([
-            'menu_id' => $menu->id,
-            'title' => 'Permissions',
-            'url' => '/um',
-            'route' => 'manage.index',
-            'parent_id' => $userManagementChild->id,
-            'icon' => 'key',
-            'order' => 30,
-            'active' => 1,
-            'permission_id' => $getPermissionId('user.manage'),
-            'super_admin_only' => false,
-        ]);
-        
-        MenuItem::create([
-            'menu_id' => $menu->id,
-            'title' => 'Menu Items',
-            'url' => '/um',
-            'route' => 'manage.index',
-            'parent_id' => $userManagementChild->id,
-            'icon' => 'list',
-            'order' => 40,
             'active' => 1,
             'permission_id' => $getPermissionId('user.manage'),
             'super_admin_only' => false,
@@ -303,7 +252,7 @@ class SeedRaiOpsMenuItems extends Seeder
         $this->command->info('✅ Created RAIOPS menu items with proper hierarchy');
         $this->command->info('   - Level 1 (Parents): 4 items');
         $this->command->info('   - Level 2 (Children): 8 items');
-        $this->command->info('   - Level 3 (Grandchildren): 6 items');
+        $this->command->info('   - Level 3 (Grandchildren): 2 items (Schedule Management, Billing)');
     }
 }
 
