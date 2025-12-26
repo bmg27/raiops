@@ -5,6 +5,7 @@ namespace App\Livewire\Permissions;
 use App\Notifications\UserActivated;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithoutUrlPagination;
 use Livewire\WithPagination;
@@ -34,6 +35,7 @@ class UsersIndex extends Component
     public ?int $userId = null;
     public string $name = '';
     public string $email = '';
+    public ?string $password = null;
     public array $selectedRoles = [];
 
     // For deleting
@@ -101,6 +103,41 @@ class UsersIndex extends Component
         }
     }
 
+    /**
+     * Generate a secure random password
+     */
+    public function generatePassword()
+    {
+        // Generate a password that meets requirements:
+        // - At least 8 characters
+        // - Contains uppercase and lowercase letters
+        // - Contains at least one number
+        // - Contains at least one special character
+        
+        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        $numbers = '0123456789';
+        $special = '!@#$%^&*';
+        
+        // Ensure at least one of each required type
+        $password = '';
+        $password .= $uppercase[random_int(0, strlen($uppercase) - 1)];
+        $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
+        $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+        $password .= $special[random_int(0, strlen($special) - 1)];
+        
+        // Fill the rest randomly from all character sets
+        $allChars = $uppercase . $lowercase . $numbers . $special;
+        for ($i = strlen($password); $i < 12; $i++) {
+            $password .= $allChars[random_int(0, strlen($allChars) - 1)];
+        }
+        
+        // Shuffle the password to randomize character positions
+        $password = str_shuffle($password);
+        
+        $this->password = $password;
+    }
+
     public function openModal($id = null)
     {
         $this->resetForm();
@@ -143,6 +180,31 @@ class UsersIndex extends Component
             'status' => 'required|in:Active,Disabled',
         ];
 
+        // Password validation for new users or when password is provided
+        if (!$this->userId) {
+            // New user - password required
+            $validationRules['password'] = [
+                'required',
+                'string',
+                'min:8',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[^a-zA-Z0-9]/',
+            ];
+        } elseif ($this->password) {
+            // Editing existing user - password optional but must meet requirements if provided
+            $validationRules['password'] = [
+                'nullable',
+                'string',
+                'min:8',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[^a-zA-Z0-9]/',
+            ];
+        }
+
         $this->validate($validationRules);
 
         if ($this->userId) {
@@ -151,6 +213,12 @@ class UsersIndex extends Component
             $user->name = $this->name;
             $user->email = $this->email;
             $user->status = $this->status;
+            
+            // Update password if provided
+            if ($this->password) {
+                $user->password = Hash::make($this->password);
+            }
+            
             $user->save();
         } else {
             // Create mode
@@ -158,7 +226,8 @@ class UsersIndex extends Component
                 'name' => $this->name,
                 'email' => $this->email,
                 'status' => $this->status,
-                'password' => bcrypt('password'), // Default password, user should change on first login
+                'password' => Hash::make($this->password),
+                'email_verified_at' => now(),
             ]);
         }
 
@@ -188,7 +257,7 @@ class UsersIndex extends Component
 
     private function resetForm()
     {
-        $this->reset(['userId', 'name', 'email', 'selectedRoles', 'status', 'modalRoles']);
+        $this->reset(['userId', 'name', 'email', 'password', 'selectedRoles', 'status', 'modalRoles']);
     }
 
     public function updatedStatus($value)

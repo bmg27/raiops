@@ -35,6 +35,11 @@ class DatabaseSeeder extends Seeder
         // RAIOPS Permissions & Menu System
         // =====================================================================
         
+        // Seed RAIOPS roles (system_admin, support_admin, billing_admin, read_only)
+        $this->call([
+            \Database\Seeders\SeedRaiOpsRoles::class,
+        ]);
+        
         // Seed RAIOPS-specific Spatie permissions (replaces RAI permissions)
         $this->call([
             \Database\Seeders\SeedRaiOpsPermissions::class,

@@ -146,6 +146,73 @@
                             <input type="email" wire:model="email" class="form-control">
                         </div>
 
+                        @if($userId)
+                            {{-- Edit mode - password is optional --}}
+                            @error('password')
+                            <div class="text-danger">{{ $message }}</div> @enderror
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Password
+                                    <small class="text-muted">(leave blank to keep current password)</small>
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           wire:model="password" 
+                                           class="form-control @error('password') is-invalid @enderror"
+                                           placeholder="Enter new password (min 8 chars, uppercase, lowercase, number, special char)">
+                                    <button type="button" 
+                                            class="btn btn-outline-secondary" 
+                                            wire:click="generatePassword"
+                                            title="Generate secure password">
+                                        <i class="bi bi-key-fill"></i> Generate
+                                    </button>
+                                </div>
+                                <small class="text-muted">
+                                    Requirements: At least 8 characters, uppercase, lowercase, number, and special character
+                                </small>
+                                @if($password)
+                                    <div class="mt-2">
+                                        <small class="text-success">
+                                            <i class="bi bi-check-circle"></i> Generated password: <code>{{ $password }}</code>
+                                        </small>
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            {{-- New user - password required --}}
+                            @error('password')
+                            <div class="text-danger">{{ $message }}</div> @enderror
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Password
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           wire:model="password" 
+                                           class="form-control @error('password') is-invalid @enderror"
+                                           placeholder="Enter password (min 8 chars, uppercase, lowercase, number, special char)"
+                                           required>
+                                    <button type="button" 
+                                            class="btn btn-outline-secondary" 
+                                            wire:click="generatePassword"
+                                            title="Generate secure password">
+                                        <i class="bi bi-key-fill"></i> Generate
+                                    </button>
+                                </div>
+                                <small class="text-muted">
+                                    Requirements: At least 8 characters, uppercase, lowercase, number, and special character
+                                </small>
+                                @if($password)
+                                    <div class="mt-2">
+                                        <small class="text-success">
+                                            <i class="bi bi-check-circle"></i> Generated password: <code>{{ $password }}</code>
+                                        </small>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-control" id="status" wire:model.live="status">
