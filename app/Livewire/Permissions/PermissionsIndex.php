@@ -30,7 +30,6 @@ class PermissionsIndex extends Component
     public string $permissionDescription = '';
     public string $permissionGuard = 'web';
     public bool $superAdminOnly = false;
-    public bool $tenantSpecific = false;
 
     // For deleting
     public ?int $deleteId = null;
@@ -40,7 +39,6 @@ class PermissionsIndex extends Component
 
     // Toggle filters
     public bool $showSuperAdminOnly = false;
-    public bool $showTenantSpecific = false;
 
     public function updatedPerPage(): void
     {
@@ -48,11 +46,6 @@ class PermissionsIndex extends Component
     }
 
     public function updatedShowSuperAdminOnly()
-    {
-        $this->resetPage();
-    }
-
-    public function updatedShowTenantSpecific()
     {
         $this->resetPage();
     }
@@ -69,16 +62,14 @@ class PermissionsIndex extends Component
 
         return view('livewire.permissions.permissions-index', [
             'permissions' => $permissions,
-            'allTenants' => \App\Models\Tenant::withoutGlobalScopes()->orderBy('name')->get(),
         ]);
     }
 
     private function queryPermissions()
     {
-        return Permission::with(['roles', 'tenants'])
+        return Permission::with(['roles'])
             ->when($this->search, fn($q) => $q->where('name','like','%'.$this->search.'%'))
             ->when($this->showSuperAdminOnly, fn($q) => $q->where('super_admin_only', true))
-            ->when($this->showTenantSpecific, fn($q) => $q->where('tenant_specific', true))
             ->orderBy($this->sortField, $this->sortDirection);
     }
 
@@ -105,7 +96,6 @@ class PermissionsIndex extends Component
             $this->permissionDescription = $perm->description ?? '';
             $this->permissionGuard = $perm->guard_name;
             $this->superAdminOnly = $perm->super_admin_only ?? false;
-            $this->tenantSpecific = $perm->tenant_specific ?? false;
         }
 
         $this->showPermissionModal = true;
@@ -132,7 +122,6 @@ class PermissionsIndex extends Component
             $perm->description = $this->permissionDescription;
             $perm->guard_name = $this->permissionGuard;
             $perm->super_admin_only = $this->superAdminOnly;
-            $perm->tenant_specific = $this->tenantSpecific ?? false;
             $perm->save();
         } else {
             // Create
@@ -141,7 +130,6 @@ class PermissionsIndex extends Component
                 'description' => $this->permissionDescription,
                 'guard_name' => $this->permissionGuard,
                 'super_admin_only' => $this->superAdminOnly,
-                'tenant_specific' => $this->tenantSpecific ?? false,
             ]);
         }
 
@@ -167,11 +155,10 @@ class PermissionsIndex extends Component
     private function resetForm()
     {
         $this->reset([
-            'permissionId','permissionName','permissionDescription','permissionGuard','superAdminOnly','tenantSpecific'
+            'permissionId','permissionName','permissionDescription','permissionGuard','superAdminOnly'
         ]);
         // Ensure defaults to false for new items
         $this->superAdminOnly = false;
-        $this->tenantSpecific = false;
     }
 
     private function clearAllUserPermissionCaches()
@@ -182,41 +169,5 @@ class PermissionsIndex extends Component
             $userPermKey = "user_permissions_{$userId}";
             Cache::forget($userPermKey);
         }
-    }
-
-    // Tenant access management (single)
-    public ?int $selectedPermissionForTenants = null;
-    public array $selectedTenants = [];
-    public bool $showTenantAccessModal = false;
-
-    public function openTenantAccessModal($permissionId)
-    {
-        $this->selectedPermissionForTenants = $permissionId;
-        $permission = Permission::findOrFail($permissionId);
-        $this->selectedTenants = $permission->tenants->pluck('id')->toArray();
-        $this->showTenantAccessModal = true;
-    }
-
-    public function closeTenantAccessModal()
-    {
-        $this->showTenantAccessModal = false;
-        $this->selectedPermissionForTenants = null;
-        $this->selectedTenants = [];
-    }
-
-    public function saveTenantAccess()
-    {
-        if (!$this->selectedPermissionForTenants) {
-            return;
-        }
-
-        $permission = Permission::findOrFail($this->selectedPermissionForTenants);
-        $permission->tenants()->sync($this->selectedTenants);
-
-        // Clear permission cache for all users
-        $this->clearAllUserPermissionCaches();
-
-        $this->closeTenantAccessModal();
-        session()->flash('message', 'Tenant access updated successfully!');
     }
 }

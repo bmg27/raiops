@@ -20,7 +20,6 @@ class MenuItemsIndex extends Component
     public string $sortDirection = 'asc';
     public bool $showInactive = false; // Default to hide inactive items
     public bool $showSuperAdminOnly = false; // Default to show all items
-    public bool $showTenantSpecific = false; // Default to show all items
 
     public bool $showModal = false;
     public bool $confirmingDelete = false;
@@ -38,7 +37,6 @@ class MenuItemsIndex extends Component
     public $isActive = false;
     public ?int $permission_id = null;
     public bool $super_admin_only = false;
-    public bool $tenant_specific = false;
     public ?string $super_admin_append = null;
     protected $paginationTheme = 'bootstrap';
     public array $perPageOptions = [10, 25, 50, 'all'];
@@ -59,9 +57,6 @@ class MenuItemsIndex extends Component
         }
         if ($cookie = Cookie::get('menu_items_show_super_admin_only')) {
             $this->showSuperAdminOnly = filter_var($cookie, FILTER_VALIDATE_BOOLEAN);
-        }
-        if ($cookie = Cookie::get('menu_items_show_tenant_specific')) {
-            $this->showTenantSpecific = filter_var($cookie, FILTER_VALIDATE_BOOLEAN);
         }
     }
 
@@ -93,9 +88,6 @@ class MenuItemsIndex extends Component
             })
             ->when($this->showSuperAdminOnly, function($q) {
                 $q->where('super_admin_only', true);
-            })
-            ->when($this->showTenantSpecific, function($q) {
-                $q->where('tenant_specific', true);
             })
             ->when($this->search, function($q) {
                 $q->where('title','like','%'.$this->search.'%')
@@ -131,11 +123,6 @@ class MenuItemsIndex extends Component
         $this->resetPage();
     }
 
-    public function updatedShowTenantSpecific()
-    {
-        Cookie::queue('menu_items_show_tenant_specific', $this->showTenantSpecific ? '1' : '0', 60 * 24 * 30); // 30 days
-        $this->resetPage();
-    }
 
     public function sortBy($field)
     {
@@ -164,7 +151,6 @@ class MenuItemsIndex extends Component
             $this->active      = $m->active;
             $this->permission_id = $m->permission_id;
             $this->super_admin_only = $m->super_admin_only ?? false;
-            $this->tenant_specific = $m->tenant_specific ?? false;
             $this->super_admin_append = $m->super_admin_append ?? null;
         }
         $this->showModal = true;
@@ -210,7 +196,6 @@ class MenuItemsIndex extends Component
                 'active'=> $this->active,
                 'permission_id' => $this->permission_id,
                 'super_admin_only' => $superAdminOnly,
-                'tenant_specific' => $this->tenant_specific ?? false,
             ];
             if ($isSuperAdmin) {
                 $updateData['super_admin_append'] = $superAdminAppend;
@@ -229,7 +214,6 @@ class MenuItemsIndex extends Component
                 'active'=> $this->active,
                 'permission_id' => $this->permission_id,
                 'super_admin_only' => $superAdminOnly,
-                'tenant_specific' => $this->tenant_specific ?? false,
             ];
             if ($isSuperAdmin) {
                 $createData['super_admin_append'] = $superAdminAppend;
@@ -258,11 +242,10 @@ class MenuItemsIndex extends Component
     {
         $this->reset([
             'menuItemId','menu_id','title','url','route','parent_id','icon','containerType',
-            'order','active','permission_id','super_admin_only','tenant_specific','super_admin_append'
+            'order','active','permission_id','super_admin_only','super_admin_append'
         ]);
         // Ensure defaults to false for new items
         $this->super_admin_only = false;
-        $this->tenant_specific = false;
         $this->super_admin_append = null;
     }
 

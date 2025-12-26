@@ -72,20 +72,8 @@ class User extends Authenticatable
         ];
     }
 
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class, 'tenant_id');
-    }
-
-    public function locations()
-    {
-        return $this->belongsToMany(
-            \App\Models\SevenLocation::class,
-            'user_locations',
-            'user_id',
-            'location_id'
-        );
-    }
+    // RAIOPS users don't have tenant or location relationships
+    // All users are RAIOPS admins
 
     public function isSuperAdmin(): bool
     {
