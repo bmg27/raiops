@@ -8,18 +8,21 @@
             <div class="row justify-content-center">
                 <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
                     <div class="chat-bubble-card p-4">
-                        <!-- Rāi Avatar and Welcome -->
+                        <!-- RaiOps Avatar and Welcome -->
                         <div class="rai-avatar-section">
-                            <div class="rai-avatar">Rāi</div>
+                            <div class="rai-avatar" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); font-size: 0.9rem;">Ops</div>
                             <div class="welcome-text">
-                                <h5>{{ __('Welcome back!') }}</h5>
-                                <small>{{ __('Please sign in to access your restaurant dashboard') }}</small>
+                                <h5>{{ __('RaiOps Admin') }}</h5>
+                                <small>{{ __('Central management console for Rāi platform') }}</small>
                             </div>
                         </div>
 
                         <!-- Logo -->
-                        <div class="logo-container">
-                            <img src="{{ asset('assets/css/images/logo_auth.png') }}" alt="Rāi Logo" class="img-fluid">
+                        <div class="logo-container text-center py-3">
+                            <h1 style="font-family: 'Playfair Display', serif; color: #1e3a5f; font-size: 2.5rem; margin: 0;">
+                                Rāi<span style="color: #c4956a; font-weight: 300;">Ops</span>
+                            </h1>
+                            <small class="text-muted">Operations & Administration</small>
                         </div>
 
                         <!-- Display Validation Errors -->
@@ -111,9 +114,9 @@
 
                         <!-- Register Link -->
                         <div class="register-section">
-                            <span class="text-muted">{{ __('New to Rāi?') }}</span>
+                            <span class="text-muted">{{ __('Need access?') }}</span>
                             <a href="{{ route('register') }}" class="register-link ms-1">
-                                {{ __('Create your account') }}
+                                {{ __('Request admin account') }}
                             </a>
                         </div>
                     </div>

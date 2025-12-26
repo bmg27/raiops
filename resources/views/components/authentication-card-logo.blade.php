@@ -1,6 +1,21 @@
-<a href="/">
-    <svg class="size-16" viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11.395 44.428C4.557 40.198 0 32.632 0 24 0 10.745 10.745 0 24 0a23.891 23.891 0 0113.997 4.502c-.2 17.907-11.097 33.245-26.602 39.926z" fill="#6875F5"/>
-        <path d="M14.134 45.885A23.914 23.914 0 0024 48c13.255 0 24-10.745 24-24 0-3.516-.756-6.856-2.115-9.866-4.659 15.143-16.608 27.092-31.75 31.751z" fill="#6875F5"/>
-    </svg>
+<a href="/" class="text-decoration-none">
+    <div class="text-center">
+        <div style="
+            width: 64px; 
+            height: 64px; 
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            margin: 0 auto 1rem;
+            box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+        ">
+            <span style="color: white; font-weight: 600; font-size: 1.1rem;">Ops</span>
+        </div>
+        <h2 style="font-family: 'Playfair Display', Georgia, serif; color: #1e3a5f; font-size: 1.75rem; margin: 0;">
+            Rāi<span style="color: #c4956a; font-weight: 300;">Ops</span>
+        </h2>
+        <small style="color: #6b7280; font-size: 0.75rem;">Operations & Administration</small>
+    </div>
 </a>
