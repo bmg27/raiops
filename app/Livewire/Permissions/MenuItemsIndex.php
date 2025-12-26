@@ -296,39 +296,4 @@ class MenuItemsIndex extends Component
         session()->flash('message', 'Permission "' . $this->newPermissionName . '" created successfully!');
     }
 
-    // Tenant access management (single)
-    public ?int $selectedMenuItemForTenants = null;
-    public array $selectedTenants = [];
-    public bool $showTenantAccessModal = false;
-
-    public function openTenantAccessModal($menuItemId)
-    {
-        $this->selectedMenuItemForTenants = $menuItemId;
-        $menuItem = MenuItem::findOrFail($menuItemId);
-        $this->selectedTenants = $menuItem->tenants->pluck('id')->toArray();
-        $this->showTenantAccessModal = true;
-    }
-
-    public function closeTenantAccessModal()
-    {
-        $this->showTenantAccessModal = false;
-        $this->selectedMenuItemForTenants = null;
-        $this->selectedTenants = [];
-    }
-
-    public function saveTenantAccess()
-    {
-        if (!$this->selectedMenuItemForTenants) {
-            return;
-        }
-
-        $menuItem = MenuItem::findOrFail($this->selectedMenuItemForTenants);
-        $menuItem->tenants()->sync($this->selectedTenants);
-
-        // Clear permission cache for all users
-        $this->clearAllUserPermissionCaches();
-
-        $this->closeTenantAccessModal();
-        session()->flash('message', 'Tenant access updated successfully!');
-    }
 }
