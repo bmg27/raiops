@@ -4,26 +4,12 @@
     <div class="tab-pane" id="roles" role="tabpanel">
         <!-- Filter Row -->
         <div class="row g-2 align-items-end mb-3">
-            <!-- TENANT DROPDOWN (Super Admin Only) -->
-            @if($isSuperAdmin)
-            <div class="col-sm-2">
-                <label class="form-label small text-muted mb-1">Tenant</label>
-                <select wire:model.live="selectedTenant"
-                        class="form-select">
-                    <option value="">All Tenants</option>
-                    @foreach($allTenants as $tenant)
-                        <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            @endif
-            
-            <div class="col-sm-{{ $isSuperAdmin ? '4' : '6' }}">
+            <div class="col-sm-8">
                 <label class="form-label small text-muted mb-1">Search</label>
                 <input type="text" class="form-control" placeholder="Search Roles..."
                        wire:model.live.debounce.500ms="search"/>
             </div>
-            <div class="col-sm-{{ $isSuperAdmin ? '6' : '6' }} text-end">
+            <div class="col-sm-4 text-end">
                 <a href="#" class="btn btn-primary btn-sm" id="contextualAddBtn" wire:click="openRoleModal">
                     <i class="bi bi-plus-lg me-1"></i> Add Role
                 </a>
@@ -41,23 +27,15 @@
                         <tr>
                             <th wire:click="sortBy('id')" style="cursor:pointer;"> ID</th>
                             <th class="sticky-col" wire:click="sortBy('name')" style="cursor:pointer;"> Role Name</th>
-                            <th wire:click="sortBy('tenant')" style="cursor:pointer;"> Tenant</th>
                             <th>Permissions</th>
                             <th class="text-center">&nbsp;</th>
                         </tr>
                         </thead>
                         <tbody>
-                        @php
-                            // Eager-load permissions if you want to see them.
-                            // If you're not eager-loading in the query, each role->permissions can cause N+1 queries.
-                            // But for small usage, it's fine. For bigger usage, do ->with('permissions') in query.
-                        @endphp
-
                         @foreach($roles as $r)
                             <tr>
                                 <td>{{ $r->id }}</td>
                                 <td class="sticky-col">{{ $r->name }}</td>
-                                <td>{{ $r->tenant ? $r->tenant->name : 'Global' }}</td>
                                 <td>
                                     @php
                                         $firstFew = $r->permissions->pluck('name')->take(3)->join(', ');
@@ -116,21 +94,6 @@
                             @error('roleName')
                             <div class="text-danger">{{ $message }}</div>
                             @enderror
-                            
-                            @if($isSuperAdmin && !$roleId)
-                            <div class="mb-3">
-                                <label class="form-label">Tenant <span class="text-danger">*</span></label>
-                                <select class="form-select" wire:model.live="modalTenant" required>
-                                    <option value="">-- Select Tenant --</option>
-                                    @foreach($allTenants as $tenant)
-                                        <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('modalTenant')
-                                <div class="text-danger small">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            @endif
                             
                             <div class="mb-3">
                                 <label class="form-label">Role Name</label>

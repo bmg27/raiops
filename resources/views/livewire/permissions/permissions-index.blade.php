@@ -28,12 +28,6 @@
                         Super Admin Only
                     </label>
                 </div>
-                <div class="form-check form-switch d-inline-block me-3">
-                    <input class="form-check-input" type="checkbox" id="showTenantSpecific" wire:model.live="showTenantSpecific">
-                    <label class="form-check-label" for="showTenantSpecific">
-                        Tenant Specific
-                    </label>
-                </div>
                 <a href="#" class="btn btn-primary btn-sm" id="contextualAddBtn"
                    wire:click="openPermissionModal">
                     <i class="bi bi-plus-lg me-1"></i> Add Permission
@@ -54,7 +48,6 @@
                             <th wire:click="sortBy('name')" style="cursor:pointer;"> Name</th>
                             <th class='sticky-col' wire:click="sortBy('name')" style="cursor:pointer;"> Permission</th>
                             <th>Assigned Roles</th>
-                            <th class="text-center">Tenant Specific</th>
                             <th class="text-center">&nbsp;</th>
                         </tr>
                         </thead>
@@ -76,21 +69,6 @@
                                 <td style="white-space: normal;">
                                     {{ $p->roles->pluck('name')->join(', ') ?: '-' }}
                                 </td>
-                                <td class="text-center">
-                                    @if($p->tenant_specific ?? false)
-                                        <span class="badge rounded-pill border border-secondary text-secondary bg-white fw-normal" 
-                                              style="cursor: pointer;"
-                                              wire:click="openTenantAccessModal({{ $p->id }})"
-                                              title="Click to manage tenant access">
-                                            <i class="bi bi-check-square text-secondary @if($p->tenants->count() > 0) me-1 @endif"></i>
-                                            @if($p->tenants->count() > 0)
-                                                {{ $p->tenants->count() }}
-                                            @endif
-                                        </span>
-                                    @else
-                                        <span class="text-muted small">—</span>
-                                    @endif
-                                </td>
                                 <td class="text-center position-static">
                                     <div class="text-end">
                                         <div class="dropdown position-static">
@@ -101,10 +79,6 @@
                                             <ul class="dropdown-menu dropdown-menu-end position-absolute">
                                                 <li><a class="dropdown-item" href="#"
                                                        wire:click="openPermissionModal({{ $p->id }})">Edit</a></li>
-                                                @if($p->tenant_specific ?? false)
-                                                <li><a class="dropdown-item" href="#"
-                                                       wire:click="openTenantAccessModal({{ $p->id }})">Manage Tenant Access</a></li>
-                                                @endif
                                                 <li><a class="dropdown-item" href="#"
                                                        wire:click="confirmDelete({{ $p->id }})">Delete</a></li>
                                             </ul>
@@ -191,20 +165,6 @@
                                 </small>
                             </div>
 
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           id="tenantSpecific"
-                                           wire:model="tenantSpecific">
-                                    <label class="form-check-label" for="tenantSpecific">
-                                        Tenant Specific
-                                    </label>
-                                </div>
-                                <small class="form-text text-muted">
-                                    If checked, this permission will only be available to tenants that are explicitly granted access. If unchecked, all tenants will have access by default.
-                                </small>
-                            </div>
 
                         </div>
                         <div class="modal-footer">
@@ -261,64 +221,6 @@
             <div class="modal-backdrop fade show"></div>
         @endif
 
-        <!-- SINGLE TENANT ACCESS MODAL -->
-        <div class="modal fade @if($showTenantAccessModal) show d-block @endif"
-             tabindex="-1"
-             @if($showTenantAccessModal) style="background: rgba(0,0,0,0.5);" @endif>
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <form wire:submit.prevent="saveTenantAccess">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Manage Tenant Access</h5>
-                            <button type="button" class="btn-close"
-                                    wire:click="closeTenantAccessModal">
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <p class="text-muted mb-3">Select which tenants should have access to this permission:</p>
-                            <div class="d-flex justify-content-between mb-3">
-                                <button type="button" class="btn btn-sm btn-outline-primary"
-                                        wire:click="$set('selectedTenants', {{ json_encode($allTenants->pluck('id')->toArray()) }})">
-                                    Select All
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary"
-                                        wire:click="$set('selectedTenants', [])">
-                                    Deselect All
-                                </button>
-                            </div>
-                            <div class="row">
-                                @foreach($allTenants as $tenant)
-                                    <div class="col-md-6 mb-2">
-                                        <div class="form-check">
-                                            <input class="form-check-input" 
-                                                   type="checkbox" 
-                                                   value="{{ $tenant->id }}"
-                                                   id="tenant_perm_{{ $tenant->id }}"
-                                                   wire:model="selectedTenants">
-                                            <label class="form-check-label" for="tenant_perm_{{ $tenant->id }}">
-                                                {{ $tenant->name }}
-                                            </label>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary"
-                                    wire:click="closeTenantAccessModal">
-                                Cancel
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                Save Access
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        @if($showTenantAccessModal)
-            <div class="modal-backdrop fade show"></div>
-        @endif
 
     </div>
 </div>

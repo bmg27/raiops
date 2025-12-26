@@ -3,102 +3,39 @@
     <div class="tab-pane fade show active" id="users" role="tabpanel">
         <!-- Filter Row -->
         <div class="row g-2 align-items-center mb-3">
-            <!-- SEARCH -->
-            <div class="row g-2 align-items-start mb-3">
-                <!-- TENANT DROPDOWN (Super Admin Only) -->
-                @if($isSuperAdmin)
-                    <div class="col-sm-2">
-                        <label class="form-label small text-muted">Tenant</label>
-                        <div class="d-flex gap-2">
-                            <select wire:model.live="selectedTenant"
-                                    class="form-select">
-                                <option value="">All Tenants</option>
-                                @foreach($allTenants as $tenant)
-                                    <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
-                                @endforeach
-                            </select>
-                            {{--@if($selectedTenant)
-                            <button wire:click="clearTenantFilter"
-                                    class="btn btn-sm btn-outline-secondary"
-                                    style="height: fit-content;"
-                                    title="Clear tenant filter">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                            @endif--}}
-                        </div>
-                    </div>
-                @endif
+            <div class="col-sm-6">
+                <label class="form-label small text-muted">Search</label>
+                <input type="text"
+                       wire:model.live.debounce.500ms="search"
+                       class="form-control"
+                       placeholder="Search by name, email, or role…">
+            </div>
 
-                <!-- LOCATIONS MULTI-SELECT -->
-                <div class="col-sm-{{ $isSuperAdmin ? '2' : '3' }}">
-                    <label class="form-label small text-muted">Locations</label>
-                    <div class="d-flex gap-2">
-                        <select wire:model.live="selectedLocation"
-                                class="form-select"
-                                size="4"
-                                multiple>
-                            <option value="Any">Any</option>
-                            <option value="All">All</option>
-                            @foreach($allLocations as $location)
-                                <option value="{{ $location->id }}">{{ $location->name }}</option>
-                            @endforeach
-                        </select>
-                        {{--<button wire:click="clearLocationFilter"
-                                class="btn btn-sm btn-outline-secondary"
-                                style="height: fit-content;"
-                                title="Clear location filter"
-                                @if(empty($selectedLocation)) disabled @endif>
-                            <i class="bi bi-x-lg"></i>
-                        </button>--}}
-                    </div>
-                    @if(!empty($selectedLocation))
-                        <small class="text-muted d-block mt-1">
-                            {{ count($selectedLocation) }} selected
-                        </small>
-                    @endif
-                </div>
-                <div class="col-sm-{{ $isSuperAdmin ? '3' : '4' }}">
-                    <label class="form-label small text-muted">Search</label>
-                    <input type="text"
-                           wire:model.live.debounce.500ms="search"
-                           class="form-control"
-                           placeholder="Search by name, email, or role…">
-                </div>
+            <!-- STATUS -->
+            <div class="col-sm-3">
+                <label class="form-label small text-muted">Status</label>
+                <select wire:model.live="userStatus" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Disabled">Disabled</option>
+                </select>
+            </div>
 
-                <!-- STATUS -->
-                <div class="col-sm-2">
-                    <label class="form-label small text-muted">Status</label>
-                    <div class="d-flex flex-column">
-                        <select wire:model.live="userStatus" class="form-select">
-                            <option value="">All Statuses</option>
-                            <option value="Active">Active</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Disabled">Disabled</option>
-                            <option value="Archived">Archived</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- ADD BUTTON -->
-                <div class="col-sm-{{ $isSuperAdmin ? '3' : '3' }} text-end">
-                    <label class="form-label small text-muted d-block">&nbsp;</label>
-                    <a href="#" class="btn btn-outline-primary btn-sm" wire:click="openModal">
-                        <i class="bi bi-plus-lg me-1"></i> Add User
-                    </a>
-                </div>
+            <!-- ADD BUTTON -->
+            <div class="col-sm-3 text-end">
+                <label class="form-label small text-muted d-block">&nbsp;</label>
+                <a href="#" class="btn btn-outline-primary btn-sm" wire:click="openModal">
+                    <i class="bi bi-plus-lg me-1"></i> Add User
+                </a>
             </div>
         </div>
 
-
         <livewire:admin.flash-message fade="no" modal="true"/>
-
 
         @php
             $statusMap = [
-                'Pending'  => ['icon' => 'bi-clock text-warning',      'label' => 'Pending'],
-                'Active'   => ['icon' => 'bi-check-circle text-success','label' => 'Active'],
+                'Active'   => ['icon' => 'bi-check-circle text-success', 'label' => 'Active'],
                 'Disabled' => ['icon' => 'bi-slash-circle text-danger', 'label' => 'Disabled'],
-                'Archived' => ['icon' => 'bi-archive text-info',       'label' => 'Archived'],
             ];
         @endphp
 
@@ -113,62 +50,36 @@
                         <tr>
                             <th wire:click="sortBy('id')" style="cursor:pointer;">ID</th>
                             <th class="sticky-col" wire:click="sortBy('name')" style="cursor:pointer;">Name</th>
-                            <th wire:click="sortBy('status')" style="cursor:pointer;">Status</th>
                             <th wire:click="sortBy('email')" style="cursor:pointer;">Email</th>
                             <th wire:click="sortBy('email_verified_at')" style="cursor:pointer;">Email Verified</th>
-                            @if($isSuperAdmin)
-                                <th wire:click="sortBy('tenant_id')" style="cursor:pointer;">Tenant</th>
-                            @endif
+                            <th>Status</th>
                             <th>Roles</th>
-                            <th>Location</th>
                             <th class="text-center">&nbsp;</th>
                         </tr>
                         </thead>
                         <tbody>
                         @forelse($users as $u)
                             @php
-                                // Grab the right icon/label, or fall back to a “?” for anything unexpected
-                                $badge = $statusMap[$u->status]
-                                    ?? ['icon' => 'bi-question-circle text-secondary', 'label' => $u->status];
+                                $status = $u->is_active ? 'Active' : 'Disabled';
+                                $badge = $statusMap[$status] ?? ['icon' => 'bi-question-circle text-secondary', 'label' => $status];
                             @endphp
 
                             <tr>
                                 <td>{{ $u->id }}</td>
                                 <td class="sticky-col">{{ $u->name }}</td>
+                                <td>{{ $u->email }}</td>
+                                <td>
+                                    @if($u->email_verified_at)
+                                        <span class="badge bg-success">Verified</span>
+                                    @else
+                                        <span class="badge bg-secondary">Unverified</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <livewire:common.badge :key="uniqid()" :text="$badge['label']"
                                                            :icon="$badge['icon']">
                                 </td>
-
-
-                                <td>{{ $u->email }}</td>
-                                <td>{{ $u->email_verified_at }}</td>
-                                @if($isSuperAdmin)
-                                    <td>
-                                        @if($u->tenant)
-                                            <span class="badge badge-theme">{{ $u->tenant->name }}</span>
-                                        @elseif($u->is_super_admin)
-                                            <span class="badge bg-warning text-dark">Super Admin</span>
-                                        @else
-                                            <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                @endif
-                                <td class="text-wrap">{{ $u->roles->pluck('name')->join(', ') }}</td>
-                                <td>
-                                    @if($u->location_access === 'None' || $u->location_access === 'All')
-                                        {{ $u->location_access }}
-                                    @elseif($u->location_access === 'Some')
-                                        @php
-                                            $locationNames = $u->locations->pluck('name')->toArray();
-                                            $fullText = implode(', ', $locationNames);
-                                            $truncatedText = strlen($fullText) > 30 ? substr($fullText, 0, 30) . '...' : $fullText;
-                                        @endphp
-                                        <span title="{{ $fullText }}">{{ $truncatedText }}</span>
-                                    @else
-                                        {{ $u->location_access }}
-                                    @endif
-                                </td>
+                                <td class="text-wrap">{{ $u->roles->pluck('name')->join(', ') ?: '—' }}</td>
                                 <td class="text-center position-static">
                                     <div class="text-end">
                                         <div class="dropdown position-static">
@@ -179,35 +90,20 @@
                                             <ul class="dropdown-menu dropdown-menu-end position-absolute">
                                                 <li><a wire:click="openModal({{ $u->id }})" class="dropdown-item"
                                                        href="#">Edit</a></li>
-                                                <li>
-                                                    @if( $u->status === 'Active' && $u->email_verified_at && $u->id !== auth()->id() && ! $u->hasRole('Super Admin') )
-                                                        <form method="POST"
-                                                              action="{{ route('admin.users.impersonate', $u ) }}"
-                                                              class="d-inlink">
-                                                            @csrf
-                                                            <a href="#" class="dropdown-item"
-                                                               onclick="event.preventDefault(); this.closest('form').submit();">
-                                                                Impersonate
-                                                            </a>
-                                                        </form>
-                                                    @endif
-                                                </li>
                                                 @can('user.delete')
                                                     <li>
-                                                        <a wire:click="deleteUser({{ $u->id }})" class="dropdown-item"
-                                                           wire:confirm='Delete User' href="#">Delete</a></li>
-                                                    <li>
+                                                        <a wire:click="confirmDelete({{ $u->id }})" class="dropdown-item text-danger"
+                                                           href="#">Delete</a>
+                                                    </li>
                                                 @endcan
                                             </ul>
                                         </div>
                                     </div>
                                 </td>
-
-
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $isSuperAdmin ? '9' : '8' }}">No users found.</td>
+                                <td colspan="7" class="text-center">No users found.</td>
                             </tr>
                         @endforelse
                         </tbody>
@@ -250,41 +146,16 @@
                             <input type="email" wire:model="email" class="form-control">
                         </div>
 
-                        @if($isSuperAdmin)
-                            <div class="mb-3">
-                                <label class="form-label">Tenant
-                                    @if(!$userId)
-                                        <span class="text-danger">*</span>
-                                    @endif
-                                </label>
-                                <select class="form-select"
-                                        wire:model.live="modalTenant"
-                                        @if($userId) disabled @endif
-                                        @if(!$userId) required @endif>
-                                    <option value="">-- Select Tenant --</option>
-                                    @foreach($allTenants as $tenant)
-                                        <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('modalTenant')
-                                <div class="text-danger small">{{ $message }}</div>
-                                @enderror
-                                @if($userId)
-                                    <small class="text-muted">Tenant cannot be changed when editing a user.</small>
-                                @endif
-                            </div>
-                        @endif
-
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-control" id="status" wire:model.live="status">
-                                @foreach($statuses as $statusOption)
-                                    <option value="{{ $statusOption }}">{{ $statusOption }}</option>
-                                @endforeach
+                                <option value="Active">Active</option>
+                                <option value="Disabled">Disabled</option>
                             </select>
                             @error('status') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
-                        @if($showEmailButton && !$userNotified)
+
+                        @if($showEmailButton && !$userNotified && $userId)
                             <div class="mb-3">
                                 <a class="btn btn-small btn-success" wire:click="notifyUser"
                                    wire:loading.class="opacity-50 pointer-events-none" wire:confirm="Send email?">Send
@@ -292,58 +163,28 @@
                             </div>
                         @endif
 
-                        @if($userId || ($isSuperAdmin && $modalTenant) || (!$isSuperAdmin))
-                            <div class="mb-3">
-                                <label>Roles</label>
-                                <div class="form-check" style="max-height:150px; overflow:auto;">
-                                    @if(count($modalRoles) > 0)
-                                        @foreach($modalRoles as $r)
-                                            <div>
-                                                <input type="checkbox" class="form-check-input"
-                                                       wire:model="selectedRoles"
-                                                       value="{{ $r->id }}"
-                                                       id="role-{{ $r->id }}">
-                                                <label for="role-{{ $r->id }}" class="form-check-label">
-                                                    {{ $r->name }}
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                    @else
-                                        <div class="text-muted small">
-                                            @if($isSuperAdmin && !$modalTenant)
-                                                Please select a tenant first to see available roles.
-                                            @else
-                                                No roles available.
-                                            @endif
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
                         <div class="mb-3">
-                            <label for="location_access" class="form-label">Location Access</label>
-                            <select id="location_access" wire:model.live="locationAccess" class="form-control">
-                                <option value="None">None</option>
-                                <option value="All">All</option>
-                                <option value="Some">Some</option>
-                            </select>
-                            @error('locationAccess') <span class="text-danger">{{ $message }}</span> @enderror
-                        </div>
-
-                        <!-- Multi-select dropdown for specific locations (only shown if 'Some' is selected) -->
-                        @if($locationAccess === 'Some')
-                            <div class="mb-3">
-                                <label for="locations" class="form-label">Select Locations</label>
-                                <select id="locations" multiple class="form-control" wire:model="selectedLocations">
-                                    @foreach($locations as $location)
-                                        <option value="{{ $location->id }}">{{ $location->name }}</option>
+                            <label>Roles</label>
+                            <div class="form-check" style="max-height:200px; overflow:auto;">
+                                @if(count($modalRoles) > 0)
+                                    @foreach($modalRoles as $r)
+                                        <div>
+                                            <input type="checkbox" class="form-check-input"
+                                                   wire:model="selectedRoles"
+                                                   value="{{ $r->id }}"
+                                                   id="role-{{ $r->id }}">
+                                            <label for="role-{{ $r->id }}" class="form-check-label">
+                                                {{ $r->name }}
+                                            </label>
+                                        </div>
                                     @endforeach
-                                </select>
-                                @error('selectedLocations') <span class="text-danger">{{ $message }}</span> @enderror
+                                @else
+                                    <div class="text-muted small">
+                                        No roles available.
+                                    </div>
+                                @endif
                             </div>
-                        @endif
-
-
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary"
@@ -367,30 +208,27 @@
          style="@if($confirmingDelete) background: rgba(0,0,0,0.5); @endif" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form wire:submit.prevent="delete">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Confirm Delete</h5>
-                        <button type="button" class="btn-close" wire:click="$set('confirmingDelete', false)"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Are you sure you want to delete this user?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary"
-                                wire:click="$set('confirmingDelete', false)">
-                            Cancel
-                        </button>
-                        <button type="submit" class="btn btn-danger">
-                            Yes, Delete
-                        </button>
-                    </div>
-                </form>
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" wire:click="$set('confirmingDelete', false)"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to disable this user?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            wire:click="$set('confirmingDelete', false)">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" wire:click="deleteUser({{ $deleteId }})"
+                            wire:click="$set('confirmingDelete', false)">
+                        Yes, Disable
+                    </button>
+                </div>
             </div>
         </div>
     </div>
     @if($confirmingDelete)
         <div class="modal-backdrop fade show"></div>
     @endif
-
 </div>
-
