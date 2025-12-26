@@ -222,14 +222,6 @@
                             @error('status') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
 
-                        @if($showEmailButton && !$userNotified && $userId)
-                            <div class="mb-3">
-                                <a class="btn btn-small btn-success" wire:click="notifyUser"
-                                   wire:loading.class="opacity-50 pointer-events-none" wire:confirm="Send email?">Send
-                                    User Activated Email</a>
-                            </div>
-                        @endif
-
                         <div class="mb-3">
                             <label>Roles</label>
                             <div class="form-check" style="max-height:200px; overflow:auto;">
