@@ -70,7 +70,6 @@ class MenuItemsIndex extends Component
         return view('livewire.permissions.menu-items-index', [
             'items' => $items,
             'allPermissions' => Permission::orderBy('name')->get(),
-            'allTenants' => \App\Models\Tenant::withoutGlobalScopes()->orderBy('name')->get(),
         ]);
     }
 
