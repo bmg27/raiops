@@ -32,32 +32,17 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // =====================================================================
-        // Legacy Seeders (Copy from RAI - optional)
+        // RAIOPS Permissions & Menu System
         // =====================================================================
         
-        // Copy permissions from RAI database (Spatie permissions)
-        // $this->call([
-        //     CopyPermissionsSeeder::class,
-        // ]);
+        // Seed RAIOPS-specific Spatie permissions (replaces RAI permissions)
+        $this->call([
+            \Database\Seeders\SeedRaiOpsPermissions::class,
+        ]);
 
-        // Copy roles from RAI database
-        // $this->call([
-        //     CopyRolesSeeder::class,
-        // ]);
-
-        // Copy super admin users from RAI database
-        // $this->call([
-        //     CopySuperAdminUsersSeeder::class,
-        // ]);
-
-        // Copy menu items from RAI database
-        // $this->call([
-        //     CopyMenuItemsSeeder::class,
-        // ]);
-
-        // Copy tenant data from RAI database
-        // $this->call([
-        //     CopyTenantDataSeeder::class,
-        // ]);
+        // Seed RAIOPS menu items with proper hierarchy
+        $this->call([
+            \Database\Seeders\SeedRaiOpsMenuItems::class,
+        ]);
     }
 }

@@ -34,13 +34,6 @@ class MenuItem extends Model
         return $this->belongsTo(\App\Models\Permission::class);
     }
 
-    /**
-     * Get the tenants that have access to this menu item
-     */
-    public function tenants()
-    {
-        return $this->belongsToMany(Tenant::class, 'tenant_menu_items', 'menu_item_id', 'tenant_id')
-            ->withTimestamps();
-    }
+    // RAIOPS doesn't have tenant-specific menu items
 }
 
