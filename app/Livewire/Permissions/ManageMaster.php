@@ -14,10 +14,14 @@ class ManageMaster extends Component
         $user = \App\Models\User::find($userId);
         if($user) $this->userId = $userId; else $this->userId = null;
         
-        // In RAIOPS, all users are super admins, so we can show all tabs
-        // But keep the check for consistency
-        $isSuperAdmin = auth()->check() && auth()->user()->hasRole('Super Admin');
-        if (!$isSuperAdmin && in_array($this->tab, ['permissions', 'menu_items', 'organize_menu'])) {
+        // Super admins have full access (like RAI)
+        // Also allow users with user.manage permission
+        $hasAccess = auth()->check() && (
+            auth()->user()->isSuperAdmin() ||
+            auth()->user()->can('user.manage')
+        );
+        
+        if (!$hasAccess && in_array($this->tab, ['permissions', 'menu_items', 'organize_menu'])) {
             $this->tab = 'users'; // Default to users tab
         }
     }

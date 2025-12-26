@@ -15,7 +15,7 @@
                 Roles
             </a>
         </li>
-        @if(auth()->check() && auth()->user()->hasRole('Super Admin'))
+        @if(auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->can('user.manage')))
         <li class="nav-item">
             <a class="nav-link {{ $tab === 'permissions' ? 'active' : '' }}"
                wire:click="$set('tab','permissions')"
@@ -50,15 +50,15 @@
             <div wire:key="tab-content-roles">
                 <livewire:permissions.roles-index/>
             </div>
-        @elseif($tab === 'permissions' && auth()->check() && auth()->user()->hasRole('Super Admin'))
+        @elseif($tab === 'permissions' && auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->can('user.manage')))
             <div wire:key="tab-content-permissions">
                 <livewire:permissions.permissions-index/>
             </div>
-        @elseif($tab === 'menu_items' && auth()->check() && auth()->user()->hasRole('Super Admin'))
+        @elseif($tab === 'menu_items' && auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->can('user.manage')))
             <div wire:key="tab-content-menu-items">
                 <livewire:permissions.menu-items-index/>
             </div>
-        @elseif($tab === 'organize_menu' && auth()->check() && auth()->user()->hasRole('Super Admin'))
+        @elseif($tab === 'organize_menu' && auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->can('user.manage')))
             <div wire:key="tab-content-organize-menu">
                 <livewire:permissions.menu-organizer/>
             </div>

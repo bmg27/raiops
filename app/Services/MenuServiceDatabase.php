@@ -23,7 +23,8 @@ class MenuServiceDatabase
     public static function getSuperAdminMenuItems(): array
     {
         $user = Auth::user();
-        $isSuperAdmin = $user && ($user->isSystemAdmin() || $user->isSuperAdmin());
+        // Super admins (is_super_admin = 1) have full access like RAI
+        $isSuperAdmin = $user && $user->isSuperAdmin();
         $userPermissions = $user ? $user->getAllPermissions()->pluck('name')->toArray() : [];
 
         // Get the main menu (RAIOPS should have one menu)

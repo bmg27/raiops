@@ -119,7 +119,12 @@ class User extends Authenticatable
      */
     public function can($ability, $arguments = []): bool
     {
-        // Check RAIOPS permissions first
+        // Super admins can do everything (like RAI)
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        // Check RAIOPS permissions
         if ($this->hasRaiOpsPermission($ability)) {
             return true;
         }

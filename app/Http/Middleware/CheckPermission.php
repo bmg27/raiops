@@ -23,22 +23,19 @@ class CheckPermission
             abort(403, 'Unauthorized.');
         }
 
-        // System Admins have all permissions in RAIOPS
+        // Allow Super Admin regardless of specific permission (like RAI)
+        // This is checked FIRST - super admins bypass all permission checks
+        if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        // System Admins have all permissions in RAIOPS (via role)
         if ($user->isSystemAdmin()) {
             return $next($request);
         }
 
-        // Check RAIOPS-specific permissions first
+        // Check RAIOPS-specific permissions
         if ($user->hasRaiOpsPermission($permission)) {
-            return $next($request);
-        }
-
-        // Legacy: Allow Super Admin regardless of specific permission
-        if (method_exists($user, 'hasRole') && $user->hasRole('Super Admin')) {
-            return $next($request);
-        }
-
-        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
             return $next($request);
         }
 
