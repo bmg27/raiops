@@ -924,6 +924,10 @@ class CustomScheduleRunner extends Component
         \Log::info("Sending schedule webhook to RAI", [
             'execution_id' => $execution->id,
             'tenant_master_id' => $executionTenantMasterId,
+            'tenant_master_name' => $tenant->name,
+            'remote_tenant_id' => $tenant->remote_tenant_id,
+            'rds_instance_id' => $tenant->rdsInstance->id,
+            'rds_instance_name' => $tenant->rdsInstance->name,
             'webhook_url' => $webhookUrl,
             'command_count' => count($selectedCommandsData),
         ]);
